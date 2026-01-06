@@ -2,20 +2,23 @@
     <div>
         <div class="compose-wrap" v-if="store.state.userInfo.id > 0">
             <div class="compose-line">
-                <n-mention
-                    class="compose-input"
-                    type="textarea"
-                    size="large"
-                    autosize
-                    :bordered="true"
-                    :loading="loading"
-                    :value="content"
-                    :prefix="['@', '#']"
-                    :options="optionsRef"
-                    @search="handleSearch"
-                    @update:value="changeContent"
-                    placeholder="分享币圈内容，说说你的市场观点"
-                />
+                <div class="compose-input-wrapper">
+                    <div class="highlight-layer" v-html="highlightedContent"></div>
+                    <n-mention
+                        class="compose-input transparent-input"
+                        type="textarea"
+                        size="large"
+                        autosize
+                        :bordered="true"
+                        :loading="loading"
+                        :value="content"
+                        :prefix="['@', '#']"
+                        :options="optionsRef"
+                        @search="handleSearch"
+                        @update:value="changeContent"
+                        placeholder="分享币圈内容，说说你的市场观点"
+                    />
+                </div>
             </div>
 
             <n-upload
@@ -401,6 +404,24 @@ const switchEye = () => {
   showEyeSet.value = !showEyeSet.value;
 };
 
+const escapeHtml = (text: string) => {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
+const highlightedContent = computed(() => {
+    let text = escapeHtml(content.value);
+    text = text.replace(/(#[\w\u4e00-\u9fa5]+)/g, '<span class="highlight-tag">$1</span>');
+    if (text.endsWith('\n')) {
+        text += '\n';
+    }
+    return text;
+});
+
 // 加载at用户列表
 const loadSuggestionUsers = debounce((k) => {
   getSuggestUsers({
@@ -722,6 +743,58 @@ onMounted(() => {
     .compose-line {
         display: flex;
         flex-direction: row;
+
+        .compose-input-wrapper {
+            position: relative;
+            width: 100%;
+
+            .highlight-layer {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+                padding: 10px 14px; /* Align with NInput large size padding */
+                font-size: 14px;
+                line-height: 1.6;
+                font-family: v-bind('store.state.app?.fontFamily || "inherit"');
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                color: var(--n-text-color);
+                pointer-events: none;
+                background-color: transparent;
+                z-index: 0;
+                text-align: left;
+                
+                :deep(.highlight-tag) {
+                    color: #8e44ad; /* Purple */
+                    font-weight: 500;
+                }
+            }
+
+            .transparent-input {
+                position: relative;
+                z-index: 1;
+                
+                :deep(.n-input) {
+                    background-color: transparent !important;
+                }
+                
+                :deep(.n-input__textarea-el) {
+                    color: transparent !important;
+                    caret-color: var(--n-caret-color); 
+                    background-color: transparent !important;
+                    font-size: 14px !important;
+                    line-height: 1.6 !important;
+                }
+                
+                /* Ensure placeholder is visible */
+                :deep(.n-input__placeholder) {
+                     z-index: 2;
+                }
+            }
+        }
 
         .compose-input {
             width: 100%;
