@@ -1,6 +1,6 @@
 <template>
     <div>
-        <main-nav title="设置" theme />
+        <main-nav title="设置" :back="true" theme />
         <n-card title="基本信息" size="small" class="setting-card">
             <div class="base-line avatar">
                 <n-avatar
@@ -340,25 +340,25 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive } from 'vue';
-import { useStore } from 'vuex';
-import { Edit } from '@vicons/tabler';
 import {
+  activateUser,
+  bindUserPhone,
+  changeAvatar,
+  changeNickname,
+  changePassword,
   getCaptcha,
   sendCaptcha,
-  bindUserPhone,
-  activateUser,
-  changePassword,
-  changeNickname,
-  changeAvatar,
 } from '@/api/user';
+import { Edit } from '@vicons/tabler';
 import type {
-  UploadInst,
-  FormItemRule,
-  FormItemInst,
   FormInst,
+  FormItemInst,
+  FormItemRule,
   InputInst,
+  UploadInst,
 } from 'naive-ui';
+import { onMounted, reactive, ref } from 'vue';
+import { useStore } from 'vuex';
 
 const uploadGateway = import.meta.env.VITE_HOST + '/v1/attachment';
 const uploadToken = 'Bearer ' + localStorage.getItem('PAOPAO_TOKEN');
@@ -420,7 +420,7 @@ const beforeUpload = async (data: any) => {
 
 const finishUpload = ({ file, event }: any): any => {
   try {
-    let data = JSON.parse(event.target?.response);
+    const data = JSON.parse(event.target?.response);
 
     if (data.code === 0) {
       if (uploadType.value === 'public/avatar') {
@@ -616,7 +616,7 @@ const sendPhoneCaptcha = () => {
       sending.value = false;
       window.$message.success('发送成功');
 
-      let s = setInterval(() => {
+      const s = setInterval(() => {
         smsCounter.value--;
         if (smsCounter.value === 0) {
           clearInterval(s);

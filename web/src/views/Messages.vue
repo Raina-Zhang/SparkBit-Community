@@ -64,21 +64,21 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, onMounted, computed } from 'vue';
-import type { Component } from 'vue';
-import { NIcon, DropdownOption } from 'naive-ui';
-import { useStore } from 'vuex';
-import { useRoute } from 'vue-router';
-import InfiniteLoading from 'v3-infinite-loading';
 import { getMessages, readAllMessage } from '@/api/user';
 import {
   LayersOutline as AllIcon,
-  AtOutline as SystemIcon,
-  PaperPlaneOutline as WhisperIcon,
-  PersonAddOutline as RequestingIcon,
-  ChatbubbleEllipsesOutline as UnreadIcon,
   OptionsOutline as OptionsIcon,
+  PersonAddOutline as RequestingIcon,
+  AtOutline as SystemIcon,
+  ChatbubbleEllipsesOutline as UnreadIcon,
+  PaperPlaneOutline as WhisperIcon,
 } from '@vicons/ionicons5';
+import { type DropdownOption, NIcon } from 'naive-ui';
+import InfiniteLoading from 'v3-infinite-loading';
+import { computed, h, onMounted, ref } from 'vue';
+import type { Component } from 'vue';
+import { useRoute } from 'vue-router';
+import { useStore } from 'vuex';
 
 const store = useStore();
 const route = useRoute();
@@ -288,7 +288,7 @@ const handleReadAll = () => {
     readAllMessage()
       .then((_res) => {
         if (messageStyleVal.value != 'unread') {
-          for (let idx in list.value) {
+          for (const idx in list.value) {
             list.value[idx].is_read = 1;
           }
         } else {

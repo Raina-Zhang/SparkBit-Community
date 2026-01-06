@@ -50,8 +50,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import { sendUserWhisper } from '@/api/user';
+import { ref } from 'vue';
 
 const props = withDefaults(
   defineProps<{
@@ -65,9 +65,7 @@ const props = withDefaults(
 const content = ref('');
 const loading = ref(false);
 
-const emit = defineEmits<{
-  (e: 'success'): void;
-}>();
+const emit = defineEmits<(e: 'success') => void>();
 const closeModal = () => {
   emit('success');
 };

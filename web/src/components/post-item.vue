@@ -5,69 +5,66 @@
                 <n-avatar round :size="30" :src="post.user.avatar" />
             </template>
             <template #header>
-                    <span class="nickname-wrap">
-                        <router-link
-                            @click.stop
-                            class="username-link"
-                            :to="{
-                                name: 'user',
-                                query: { s: post.user.username },
-                            }"
+                <div class="post-header">
+                    <div class="post-header-top">
+                        <span class="nickname-wrap">
+                            <router-link
+                                @click.stop
+                                class="username-link"
+                                :to="{
+                                    name: 'user',
+                                    query: { s: post.user.username },
+                                }"
+                            >
+                                {{ post.user.nickname }}
+                            </router-link>
+                        </span>
+                        <n-tag
+                            v-if="post.is_top"
+                            class="top-tag"
+                            type="warning"
+                            size="small"
+                            round
                         >
-                            {{ post.user.nickname }}
-                        </router-link>
-                    </span>
-                    <span class="username-wrap"> @{{ post.user.username }} </span>
-                    <n-tag
-                        v-if="post.is_top"
-                        class="top-tag"
-                        type="warning"
-                        size="small"
-                        round
-                    >
-                        置顶
-                    </n-tag>
-                    <n-tag
-                        v-if="post.visibility == 1"
-                        class="top-tag"
-                        type="error"
-                        size="small"
-                        round
-                    >
-                        私密
-                    </n-tag>
-                    <n-tag
-                        v-if="post.visibility == 2"
-                        class="top-tag"
-                        type="info"
-                        size="small"
-                        round
-                    >
-                        好友可见
-                    </n-tag>
+                            置顶
+                        </n-tag>
+                        <n-tag
+                            v-if="post.visibility == 1"
+                            class="top-tag"
+                            type="error"
+                            size="small"
+                            round
+                        >
+                            私密
+                        </n-tag>
+                        <n-tag
+                            v-if="post.visibility == 2"
+                            class="top-tag"
+                            type="info"
+                            size="small"
+                            round
+                        >
+                            好友可见
+                        </n-tag>
+                    </div>
+                    <div class="post-header-bottom">
+                        <span class="timestamp">
+                            {{ formatPrettyDate(post.created_on) }}
+                        </span>
+                    </div>
+                </div>
             </template>
             <template #header-extra>
-                <div class="item-header-extra">
-                    <span class="timestamp">
-                        {{ post.ip_loc ? post.ip_loc + ' · ' : post.ip_loc }}
-                        {{ formatPrettyDate(post.created_on) }}
-                    </span>
-                    <n-dropdown
-                        placement="bottom-end"
-                        trigger="hover"
-                        size="small"
-                        :options="tweetOptions"
-                        @select="handleTweetAction"
-                    >
-                        <n-button quaternary circle>
-                            <template #icon>
-                                <n-icon>
-                                    <more-horiz-filled />
-                                </n-icon>
-                            </template>
-                        </n-button>
-                    </n-dropdown>
-                </div>
+                <n-button
+                    v-if="!isOwner && !post.user.is_following"
+                    size="tiny"
+                    secondary
+                    type="primary"
+                    round
+                    @click.stop="handleFollow"
+                >
+                    关注
+                </n-button>
             </template>
             <template #description v-if="post.texts.length > 0">
                 <span
@@ -102,7 +99,7 @@
                 <n-space justify="space-between">
                     <div class="opt-item hover" @click.stop="handlePostStar">
                         <n-icon size="18" class="opt-item-icon">
-                            <heart-outline />
+                            <flash-outline />
                         </n-icon>
                         {{ post.upvote_count }}
                     </div>
@@ -118,6 +115,19 @@
                         </n-icon>
                         {{ post.collection_count }}
                     </div>
+                    <n-dropdown
+                        placement="bottom-end"
+                        trigger="hover"
+                        size="small"
+                        :options="tweetOptions"
+                        @select="handleTweetAction"
+                    >
+                        <div class="opt-item hover" @click.stop>
+                            <n-icon size="18" class="opt-item-icon">
+                                <share-social-outline />
+                            </n-icon>
+                        </div>
+                    </n-dropdown>
                 </n-space>
             </template>
         </n-thing>
@@ -125,28 +135,24 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, computed } from 'vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import { NIcon } from 'naive-ui';
-import type { Component } from 'vue';
-import type { DropdownOption } from 'naive-ui';
-import { formatPrettyDate } from '@/utils/formatTime';
+import { postCollection, postStar } from '@/api/post';
 import { preparePost } from '@/utils/content';
-import { postStar, postCollection } from '@/api/post';
+import { formatPrettyDate } from '@/utils/formatTime';
+import { Discord, Link, Telegram, Twitter } from '@vicons/fa';
 import {
-  PaperPlaneOutline,
-  HeartOutline,
   BookmarkOutline,
   ChatboxOutline,
+  FlashOutline,
   ShareSocialOutline,
-  PersonAddOutline,
-  PersonRemoveOutline,
-  BodyOutline,
-  WalkOutline,
 } from '@vicons/ionicons5';
 import { MoreHorizFilled } from '@vicons/material';
 import copy from 'copy-to-clipboard';
+import { NIcon } from 'naive-ui';
+import type { DropdownOption } from 'naive-ui';
+import { computed, h, ref } from 'vue';
+import type { Component } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const router = useRouter();
 const store = useStore();
@@ -167,6 +173,10 @@ const emit = defineEmits<{
   (e: 'handle-friend-action', user: Item.PostProps): void;
 }>();
 
+const handleFollow = () => {
+  emit('handle-follow-action', props.post);
+};
+
 const renderIcon = (icon: Component) => {
   return () => {
     return h(NIcon, null, {
@@ -176,87 +186,87 @@ const renderIcon = (icon: Component) => {
 };
 
 const tweetOptions = computed(() => {
-  let options: DropdownOption[] = [];
-  if (!props.isOwner) {
-    options.push({
-      label: '私信 @' + props.post.user.username,
-      key: 'whisper',
-      icon: renderIcon(PaperPlaneOutline),
-    });
-  }
-  if (!props.isOwner && props.addFollowAction) {
-    if (props.post.user.is_following) {
-      options.push({
-        label: '取消关注 @' + props.post.user.username,
-        key: 'unfollow',
-        icon: renderIcon(WalkOutline),
-      });
-    } else {
-      options.push({
-        label: '关注 @' + props.post.user.username,
-        key: 'follow',
-        icon: renderIcon(BodyOutline),
-      });
-    }
-  }
-  if (!props.isOwner && props.addFriendAction) {
-    if (props.post.user.is_friend) {
-      options.push({
-        label: '删除好友 @' + props.post.user.username,
-        key: 'delete',
-        icon: renderIcon(PersonRemoveOutline),
-      });
-    } else {
-      options.push({
-        label: '添加朋友 @' + props.post.user.username,
-        key: 'requesting',
-        icon: renderIcon(PersonAddOutline),
-      });
-    }
-  }
-  options.push({
-    label: '复制链接',
-    key: 'copyTweetLink',
-    icon: renderIcon(ShareSocialOutline),
-  });
+  const options: DropdownOption[] = [
+    {
+      label: 'Telegram',
+      key: 'telegram',
+      icon: renderIcon(Telegram),
+    },
+    {
+      label: 'X',
+      key: 'twitter',
+      icon: renderIcon(Twitter),
+    },
+    {
+      label: 'Discord',
+      key: 'discord',
+      icon: renderIcon(Discord),
+    },
+    {
+      label: '复制链接',
+      key: 'copyTweetLink',
+      icon: renderIcon(Link),
+    },
+  ];
   return options;
 });
 
 const handleTweetAction = async (
-  item:
-    | 'copyTweetLink'
-    | 'whisper'
-    | 'follow'
-    | 'unfollow'
-    | 'delete'
-    | 'requesting',
+  item: 'copyTweetLink' | 'telegram' | 'twitter' | 'discord',
 ) => {
-  switch (item) {
-    case 'copyTweetLink':
-      copy(
-        `${window.location.origin}/#/post?id=${post.value.id}&share=copy_link&t=${new Date().getTime()}`,
-      );
-      window.$message.success('链接已复制到剪贴板');
-      break;
-    case 'whisper':
-      emit('send-whisper', props.post.user);
-      break;
-    case 'delete':
-    case 'requesting':
-      emit('handle-friend-action', props.post);
-      break;
-    case 'follow':
-    case 'unfollow':
-      emit('handle-follow-action', props.post);
-      break;
-    default:
-      break;
+  try {
+    const url = encodeURIComponent(
+      `${window.location.origin}/#/post?id=${post.value.id}`,
+    );
+    const title =
+      post.value.texts.length > 0
+        ? post.value.texts[0].content.substring(0, 50) + '...'
+        : '分享动态';
+    const text = encodeURIComponent(title);
+
+    switch (item) {
+      case 'telegram':
+        const tgWin = window.open(
+          `https://t.me/share/url?url=${url}&text=${text}`,
+          '_blank',
+        );
+        if (!tgWin) throw new Error('Telegram popup blocked');
+        break;
+      case 'twitter':
+        const twWin = window.open(
+          `https://twitter.com/intent/tweet?url=${url}&text=${text}`,
+          '_blank',
+        );
+        if (!twWin) throw new Error('Twitter popup blocked');
+        break;
+      case 'discord':
+        if (!copy(`${window.location.origin}/#/post?id=${post.value.id}`)) {
+          throw new Error('Clipboard copy failed');
+        }
+        window.$message.success('链接已复制，请在 Discord 中粘贴分享');
+        break;
+      case 'copyTweetLink':
+        if (
+          !copy(
+            `${window.location.origin}/#/post?id=${post.value.id}&share=copy_link&t=${new Date().getTime()}`,
+          )
+        ) {
+          throw new Error('Clipboard copy failed');
+        }
+        window.$message.success('链接已复制到剪贴板');
+        break;
+      default:
+        break;
+    }
+  } catch (error) {
+    console.error('Share failed:', error);
+    window.$message.error('分享操作失败，请检查浏览器设置');
   }
 };
 
 const post = computed({
   get: () => {
-    let post: Item.PostComponentProps = Object.assign(
+    const post: Item.PostComponentProps = Object.assign(
       {
         texts: [],
         imgs: [],
@@ -388,9 +398,22 @@ const doClickText = (e: MouseEvent, id: number) => {
     .nickname-wrap {
         font-size: 14px;
     }
-    .username-wrap {
-        font-size: 14px;
+    .post-header {
+        display: flex;
+        flex-direction: column;
+    }
+    .post-header-top {
+        display: flex;
+        align-items: center;
+    }
+    .post-header-bottom {
+        display: flex;
+        align-items: center;
         opacity: 0.75;
+        margin-top: 4px;
+        .timestamp {
+            font-size: 12px;
+        }
     }
 
     .top-tag {
@@ -400,9 +423,6 @@ const doClickText = (e: MouseEvent, id: number) => {
         display: flex;
         align-items: center;
         opacity: 0.75;
-        .timestamp {
-            font-size: 12px;
-        }
     }
     .post-text {
         text-align: justify;

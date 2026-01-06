@@ -17,7 +17,6 @@
                             {{ post.user.nickname }}
                         </router-link>
                     </span>
-                    <span class="username-wrap"> @{{ post.user.username }} </span>
                     <n-tag
                         v-if="post.is_top"
                         class="top-tag"
@@ -47,28 +46,21 @@
                     </n-tag>
                     <div>
                         <span class="timestamp-mobile">
-                            {{ formatPrettyDate(post.created_on) }} {{ post.ip_loc }}
+                            {{ formatPrettyDate(post.created_on) }}
                         </span>
                     </div>
             </template>
             <template #header-extra>
-                <div class="item-header-extra">
-                    <n-dropdown
-                        placement="bottom-end"
-                        trigger="click"
-                        size="small"
-                        :options="tweetOptions"
-                        @select="handleTweetAction"
-                    >
-                        <n-button quaternary circle>
-                            <template #icon>
-                                <n-icon>
-                                    <more-horiz-filled />
-                                </n-icon>
-                            </template>
-                        </n-button>
-                    </n-dropdown>
-                </div>
+                <n-button
+                    v-if="!isOwner && !post.user.is_following"
+                    size="tiny"
+                    secondary
+                    type="primary"
+                    round
+                    @click.stop="handleFollow"
+                >
+                    关注
+                </n-button>
             </template>
             <template #description v-if="post.texts.length > 0">
                 <div @click="goPostDetail(post.id)">
@@ -104,7 +96,7 @@
                 <n-space justify="space-between">
                     <div class="opt-item" @click.stop="handlePostStar">
                         <n-icon size="18" class="opt-item-icon">
-                            <heart-outline />
+                            <flash-outline />
                         </n-icon>
                         {{ post.upvote_count }}
                     </div>
@@ -120,6 +112,19 @@
                         </n-icon>
                         {{ post.collection_count }}
                     </div>
+                    <n-dropdown
+                        placement="bottom-end"
+                        trigger="click"
+                        size="small"
+                        :options="tweetOptions"
+                        @select="handleTweetAction"
+                    >
+                        <div class="opt-item" @click.stop>
+                            <n-icon size="18" class="opt-item-icon">
+                                <share-social-outline />
+                            </n-icon>
+                        </div>
+                    </n-dropdown>
                 </n-space>
             </template>
         </n-thing>
@@ -127,28 +132,28 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, computed } from 'vue';
-import type { Component } from 'vue';
-import { NIcon } from 'naive-ui';
-import { useStore } from 'vuex';
-import type { DropdownOption } from 'naive-ui';
-import { useRouter } from 'vue-router';
-import { formatPrettyDate } from '@/utils/formatTime';
+import { postCollection, postStar } from '@/api/post';
 import { preparePost } from '@/utils/content';
-import { postStar, postCollection } from '@/api/post';
+import { formatPrettyDate } from '@/utils/formatTime';
 import {
-  PaperPlaneOutline,
-  HeartOutline,
+  BodyOutline,
   BookmarkOutline,
   ChatboxOutline,
-  ShareSocialOutline,
+  FlashOutline,
+  PaperPlaneOutline,
   PersonAddOutline,
   PersonRemoveOutline,
-  BodyOutline,
+  ShareSocialOutline,
   WalkOutline,
 } from '@vicons/ionicons5';
 import { MoreHorizFilled } from '@vicons/material';
 import copy from 'copy-to-clipboard';
+import { NIcon } from 'naive-ui';
+import type { DropdownOption } from 'naive-ui';
+import { computed, h, ref } from 'vue';
+import type { Component } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const router = useRouter();
 const store = useStore();
@@ -169,6 +174,10 @@ const emit = defineEmits<{
   (e: 'handle-friend-action', user: Item.PostProps): void;
 }>();
 
+const handleFollow = () => {
+  emit('handle-follow-action', props.post);
+};
+
 const renderIcon = (icon: Component) => {
   return () => {
     return h(NIcon, null, {
@@ -178,7 +187,7 @@ const renderIcon = (icon: Component) => {
 };
 
 const tweetOptions = computed(() => {
-  let options: DropdownOption[] = [];
+  const options: DropdownOption[] = [];
   if (!props.isOwner) {
     options.push({
       label: '私信 @' + props.post.user.username,
@@ -235,10 +244,19 @@ const handleTweetAction = async (
 ) => {
   switch (item) {
     case 'copyTweetLink':
-      copy(
-        `${window.location.origin}/#/post?id=${post.value.id}&share=copy_link&t=${new Date().getTime()}`,
-      );
-      window.$message.success('链接已复制到剪贴板');
+      try {
+        if (
+          !copy(
+            `${window.location.origin}/#/post?id=${post.value.id}&share=copy_link&t=${new Date().getTime()}`,
+          )
+        ) {
+          throw new Error('Clipboard copy failed');
+        }
+        window.$message.success('链接已复制到剪贴板');
+      } catch (error) {
+        console.error('Share failed:', error);
+        window.$message.error('分享操作失败');
+      }
       break;
     case 'whisper':
       emit('send-whisper', props.post.user);
@@ -258,7 +276,7 @@ const handleTweetAction = async (
 
 const post = computed({
   get: () => {
-    let post: Item.PostComponentProps = Object.assign(
+    const post: Item.PostComponentProps = Object.assign(
       {
         texts: [],
         imgs: [],

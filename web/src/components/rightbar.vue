@@ -1,143 +1,213 @@
 <template>
     <div class="rightbar-wrap" v-if="!store.state.collapsedRight">
         <div class="search-wrap">
-            <n-input
-                round
-                clearable
-                placeholder="搜一搜..."
-                v-model:value="keyword"
-                @keyup.enter.prevent="handleSearch"
-            >
-                <template #prefix>
-                    <n-icon :component="Search" />
-                </template>
-            </n-input>
-        </div>
-        <n-card v-if="showFollowTopics" class="hottopic-wrap" title="关注话题" embedded :bordered="false" size="small">
-            <n-spin :show="loading">
-                <div class="hot-tag-item" v-for="tag in followTags" :key="tag.id">
-                    <router-link
-                        class="hash-link"
-                        :to="{
-                            name: 'home',
-                            query: {
-                                q: tag.tag,
-                                t: 'tag',
-                            },
-                        }"
-                    >
-                        #{{ tag.tag }}
-                    </router-link>
-
-                    <div class="post-num">
-                        {{ formatQuoteNum(tag.quote_num) }}
-                    </div>
-                </div>
-            </n-spin>
-        </n-card>
-        <n-card class="hottopic-wrap" title="热门话题" embedded :bordered="false" size="small">
-            <n-spin :show="loading">
-                <div class="hot-tag-item" v-for="tag in hotTags" :key="tag.id">
-                    <router-link
-                        class="hash-link"
-                        :to="{
-                            name: 'home',
-                            query: {
-                                q: tag.tag,
-                                t: 'tag',
-                            },
-                        }"
-                    >
-                        #{{ tag.tag }}
-                    </router-link>
-
-                    <div class="post-num">
-                        {{ formatQuoteNum(tag.quote_num) }}
-                    </div>
-                </div>
-            </n-spin>
-        </n-card>
-        <n-card class="copyright-wrap" embedded :bordered="false" size="small">
-            <div class="copyright">&copy; {{ store.state.profile.copyrightTop }}</div>
-            <div>
-                <n-space>
-                    <a
-                        :href="store.state.profile.copyrightLeftLink"
-                        target="_blank"
-                        class="hash-link"
-                    >
-                        {{ store.state.profile.copyrightLeft }}
-                    </a>
-                    <a
-                        :href="store.state.profile.copyrightRightLink"
-                        target="_blank"
-                        class="hash-link"
-                    >
-                        {{ store.state.profile.copyrightRight }}
-                    </a>
-                </n-space>
+            <div class="search-box">
+                <n-input
+                    ref="searchInputRef"
+                    class="search-input"
+                    placeholder="Search"
+                    v-model:value="keyword"
+                    @keyup.enter.prevent="handleSearch"
+                >
+                    <template #prefix>
+                        <n-icon :component="Search" />
+                    </template>
+                </n-input>
             </div>
-        </n-card>
-        <div class="site-info" v-if="store.state.userInfo.is_admin" ref="userInfoElement">
-            <span class="site-info-item">{{ registerUserCount }} 注册用户，{{ onlineUserCount }} 人在线，最高在线 {{ historyMaxOnline }} 人，站点上线于 {{ formatRelativeTime(serverUpTime) }}</span>
         </div>
+        <n-card class="hottopic-wrap" title="热门话题" embedded :bordered="false" size="small">
+            <template #header-extra>
+                <n-button text size="tiny" @click="router.push({ name: 'topic' })">
+                    查看更多
+                </n-button>
+            </template>
+            <n-spin :show="loading">
+                <div class="hot-tag-item" v-for="(tag, index) in hotTags" :key="tag.id">
+                    <span class="rank-num" :class="'rank-' + (index + 1)">{{ index + 1 }}</span>
+                    <router-link
+                        class="hash-link"
+                        :to="{
+                            name: 'home',
+                            query: {
+                                q: tag.tag,
+                                t: 'tag',
+                            },
+                        }"
+                    >
+                        #{{ tag.tag }}
+                    </router-link>
+
+                    <div class="post-num">
+                        {{ formatQuoteNum(tag.quote_num) }}
+                    </div>
+                </div>
+            </n-spin>
+        </n-card>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
 import { getTags } from '@/api/post';
-import { getSiteInfo } from '@/api/user';
 import { Search } from '@vicons/ionicons5';
-import { formatRelativeTime } from '@/utils/formatTime';
+import { onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const hotTags = ref<Item.TagProps[]>([]);
-const followTags = ref<Item.TagProps[]>([]);
 const loading = ref(false);
 const keyword = ref('');
+const searchInputRef = ref<any>(null);
 const store = useStore();
 const router = useRouter();
-const registerUserCount = ref(0);
-const onlineUserCount = ref(0);
-const historyMaxOnline = ref(0);
-const serverUpTime = ref(0);
-const userInfoElement = ref<HTMLElement | null>(null);
-const rightFollowTopicMaxSize = Number(
-  import.meta.env.VITE_RIGHT_FOLLOW_TOPIC_MAX_SIZE,
-);
-const rightHotTopicMaxSize = Number(
-  import.meta.env.VITE_RIGHT_HOT_TOPIC_MAX_SIZE,
-);
 
-const loadSiteInfo = () => {
-  getSiteInfo()
-    .then((res) => {
-      registerUserCount.value = res.register_user_count;
-      onlineUserCount.value = res.online_user_count;
-      historyMaxOnline.value = res.history_max_online;
-      serverUpTime.value = res.server_up_time;
-    })
-    .catch((_err) => {
-      // do nothing
-    });
-  observer.disconnect();
-};
+const mockTags: Item.TagProps[] = [
+  {
+    id: 1001,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'Bitcoin',
+    quote_num: 15400,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+  {
+    id: 1002,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'Ethereum',
+    quote_num: 8900,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+  {
+    id: 1003,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'Web3',
+    quote_num: 5600,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+  {
+    id: 1004,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'DeFi',
+    quote_num: 4200,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+  {
+    id: 1005,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'NFT',
+    quote_num: 3800,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+  {
+    id: 1006,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'GameFi',
+    quote_num: 2100,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+  {
+    id: 1007,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'Metaverse',
+    quote_num: 1800,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+  {
+    id: 1008,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'DAO',
+    quote_num: 1500,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+  {
+    id: 1009,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'Layer2',
+    quote_num: 1200,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+  {
+    id: 1010,
+    user_id: 0,
+    user: {} as Item.UserInfo,
+    tag: 'ZK-Rollup',
+    quote_num: 900,
+    created_on: 0,
+    is_following: 0,
+    is_top: 0,
+    is_pin: 0,
+    is_del: 0,
+  },
+];
+
 const loadHotTags = () => {
   loading.value = true;
   getTags({
     type: 'hot_extral',
-    num: rightHotTopicMaxSize,
-    extral_num: rightFollowTopicMaxSize,
+    num: 10,
+    extral_num: 0,
   })
     .then((res) => {
-      hotTags.value = res.topics;
-      followTags.value = res.extral_topics ?? [];
-      showFollowTopics.value = true;
+      const apiTags = res.topics || [];
+      // Combine API tags with mock tags, ensuring we have enough data
+      // Filter out duplicates if necessary, but here we prioritize mock tags if api returns few
+      const combinedTags = [...apiTags];
+
+      // Add mock tags that are not in apiTags
+      mockTags.forEach((mockTag) => {
+        if (!combinedTags.some((t) => t.tag === mockTag.tag)) {
+          combinedTags.push(mockTag);
+        }
+      });
+
+      hotTags.value = combinedTags.slice(0, 10);
       loading.value = false;
     })
     .catch((_err) => {
+      hotTags.value = mockTags;
       loading.value = false;
     });
 };
@@ -155,47 +225,19 @@ const handleSearch = () => {
     },
   });
 };
-const showFollowTopics = computed({
-  get: () => {
-    return store.state.userLogined && followTags.value.length !== 0;
-  },
-  set: (newVal) => {
-    // do nothing
-  },
-});
+
 watch(
   () => ({
-    refreshTopicFollow: store.state.refreshTopicFollow,
     userLogined: store.state.userLogined,
   }),
   (to, from) => {
-    if (to.refreshTopicFollow !== from.refreshTopicFollow || to.userLogined) {
+    if (to.userLogined) {
       loadHotTags();
     }
-    if (store.state.userInfo.is_admin) {
-      loadSiteInfo();
-    }
   },
 );
-const observer = new IntersectionObserver(
-  (entries: IntersectionObserverEntry[]) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        loadSiteInfo();
-      }
-    });
-  },
-  {
-    root: null,
-    rootMargin: '0px',
-    threshold: 1,
-  },
-);
+
 onMounted(() => {
-  // 不知道为什么 store.state.userInfo.is_admin 在这里就是不起作用f*k，所以才用这么一种蹩脚的法子来凑合
-  if (userInfoElement.value) {
-    observer.observe(userInfoElement.value);
-  }
   loadHotTags();
 });
 </script>
@@ -213,14 +255,45 @@ onMounted(() => {
     overflow: auto;
     .search-wrap {
         margin: 12px 0;
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            position: relative;
+            background: transparent;
+            
+            .search-input {
+                width: 100%;
+                
+                :deep(.n-input__input-el) {
+                    height: 34px;
+                }
+            }
+        }
     }
 
     .hot-tag-item {
         line-height: 2;
         position: relative;
+        display: flex;
+        align-items: center;
+
+        .rank-num {
+            width: 20px;
+            margin-right: 8px;
+            font-style: italic;
+            font-weight: bold;
+            color: #8c8c8c;
+            text-align: center;
+            flex-shrink: 0;
+            
+            &.rank-1 { color: #f5222d; }
+            &.rank-2 { color: #fa8c16; }
+            &.rank-3 { color: #fadb14; }
+        }
 
         .hash-link {
-            width: calc(100% - 60px);
+            width: calc(100% - 60px - 28px);
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
@@ -241,33 +314,9 @@ onMounted(() => {
     .hottopic-wrap {
         margin-bottom: 10px;
     }
-
-    .site-info {
-        margin-top: 8px;
-        padding-left: 16px;
-        padding-right: 16px;
-        .site-info-item {
-            font-size: 10px;
-            opacity: 0.75;
-        }
-    }
-
-    .copyright-wrap {
-        .copyright {
-            font-size: 12px;
-            opacity: 0.75;
-        }
-
-        .hash-link {
-            font-size: 12px;
-        }
-    }
 }
 .dark {
     .hottopic-wrap {
-        background-color: #18181c;
-    }
-    .copyright-wrap {
         background-color: #18181c;
     }
 }

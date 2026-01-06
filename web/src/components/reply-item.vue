@@ -83,22 +83,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useStore } from 'vuex';
-import { Trash } from '@vicons/tabler';
-import { formatPrettyTime } from '@/utils/formatTime';
 import {
   deleteCommentReply,
-  thumbsUpTweetReply,
   thumbsDownTweetReply,
+  thumbsUpTweetReply,
 } from '@/api/post';
-import {
-  ThumbUpTwotone,
-  ThumbUpOutlined,
-  ThumbDownTwotone,
-  ThumbDownOutlined,
-} from '@vicons/material';
 import { YesNoEnum } from '@/utils/IEnum';
+import { formatPrettyTime } from '@/utils/formatTime';
+import {
+  ThumbDownOutlined,
+  ThumbDownTwotone,
+  ThumbUpOutlined,
+  ThumbUpTwotone,
+} from '@vicons/material';
+import { Trash } from '@vicons/tabler';
+import { ref } from 'vue';
+import { useStore } from 'vuex';
 
 const props = withDefaults(
   defineProps<{
@@ -267,7 +267,7 @@ const execDelAction = () => {
              }
 
             .show {
-                color: #18a058;
+                color: #6A60FF;
                 cursor: pointer;
             }
 
@@ -287,7 +287,7 @@ const execDelAction = () => {
         .base-wrap {
             .reply-switch {
                 .show {
-                    color: #63e2b7;
+                    color: #6A60FF;
                 }
             }
         }

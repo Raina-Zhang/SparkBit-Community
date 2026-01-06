@@ -74,13 +74,13 @@ export enum RequestingFriendStatusEnum {
 /** 动态可见度枚举 */
 export enum VisibilityEnum {
   /** 公开 */
-  PUBLIC,
+  PUBLIC = 0,
   /** 私密 */
-  PRIVATE,
+  PRIVATE = 1,
   /** 好友可见 */
-  FRIEND,
+  FRIEND = 2,
   /** 关注可见 */
-  Following,
+  Following = 3,
 }
 
 /** 二态枚举 */

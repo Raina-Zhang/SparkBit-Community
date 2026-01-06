@@ -21,6 +21,7 @@ var (
 	ts     core.TweetSearchService
 	ds     core.DataService
 	oss    core.ObjectStorageService
+	ls     core.LiveService
 	webDsa core.WebDataServantA
 
 	_onceInitial sync.Once
@@ -39,6 +40,11 @@ func WebDataServantA() core.WebDataServantA {
 func ObjectStorageService() core.ObjectStorageService {
 	lazyInitial()
 	return oss
+}
+
+func LiveService() core.LiveService {
+	lazyInitial()
+	return ls
 }
 
 func TweetSearchService() core.TweetSearchService {
@@ -64,8 +70,13 @@ func lazyInitial() {
 	_onceInitial.Do(func() {
 		initDsX()
 		initOSS()
+		initLive()
 		initTsX()
 	})
+}
+
+func initLive() {
+	ls = live.NewLiveService()
 }
 
 func initDsX() {

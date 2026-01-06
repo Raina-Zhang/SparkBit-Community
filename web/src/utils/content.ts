@@ -34,12 +34,12 @@ export const preparePost = (
   foldHint: string,
   unfoldHint: string,
   maxSize: number,
-  isFold: boolean = true,
+  isFold = true,
 ) => {
   const isEllipsis = content.length > maxSize;
   if (isFold && isEllipsis) {
     content = content.substring(0, maxSize);
-    let latestChar = content.charAt(maxSize - 1);
+    const latestChar = content.charAt(maxSize - 1);
     if (latestChar == '#' || latestChar == '#' || latestChar == '@') {
       content = content.substring(0, maxSize - 1);
     }

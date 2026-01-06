@@ -98,6 +98,10 @@ SmsJuhe:
   Gateway: https://v.juhe.cn/sms/send
   Key:
   TplID:
+LiveKit:
+  Url: http://localhost:7880
+  ApiKey: devkey
+  SecretKey: secret
   TplVal: "#code#=%s&#m#=%d"
 Alipay: 
   AppID: "paopao-ce-app-id"

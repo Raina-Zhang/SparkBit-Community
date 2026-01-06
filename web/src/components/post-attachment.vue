@@ -36,9 +36,9 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref } from 'vue';
+import { getAttachment, precheckAttachment } from '@/api/user';
 import { CloudDownloadOutline } from '@vicons/ionicons5';
-import { precheckAttachment, getAttachment } from '@/api/user';
+import { h, ref } from 'vue';
 
 const props = withDefaults(
   defineProps<{

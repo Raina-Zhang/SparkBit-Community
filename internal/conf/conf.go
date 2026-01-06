@@ -121,6 +121,7 @@ func setupSetting(suite []string, noDefault bool) error {
 		"LocalOSS":          &LocalOSSSetting,
 		"S3":                &S3Setting,
 		"WebProfile":        &WebProfileSetting,
+		"LiveKit":           &LiveKitSetting,
 	}
 	for k, v := range objects {
 		err := vp.UnmarshalKey(k, v)

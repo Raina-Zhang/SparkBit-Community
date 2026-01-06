@@ -2,18 +2,12 @@
     <div>
         <div class="compose-wrap" v-if="store.state.userInfo.id > 0">
             <div class="compose-line">
-                <div class="compose-user">
-                    <n-avatar
-                        round
-                        :size="30"
-                        :src="store.state.userInfo.avatar"
-                    />
-                </div>
                 <n-mention
+                    class="compose-input"
                     type="textarea"
                     size="large"
                     autosize
-                    :bordered="false"
+                    :bordered="true"
                     :options="optionsRef"
                     :prefix="['@']"
                     :loading="loading"
@@ -24,8 +18,8 @@
                     @focus="focusComment"
                     :placeholder="
                         props.lock === 1
-                            ? '泡泡已被锁定，回复功能已关闭'
-                            : '快来评论两句吧...'
+                            ? '动态已被锁定，回复功能已关闭'
+                            : '无论是甚至远古时代，还是未来......'
                     "
                 />
             </div>
@@ -167,18 +161,16 @@
 
 
 <script setup lang="ts">
-import { onMounted, computed, ref } from 'vue';
-import { useStore } from 'vuex';
-import { debounce } from 'lodash';
-import { ImageOutline } from '@vicons/ionicons5';
 import { createComment } from '@/api/post';
 import { getSuggestUsers } from '@/api/user';
 import { parsePostTag } from '@/utils/content';
+import { ImageOutline } from '@vicons/ionicons5';
+import { debounce } from 'lodash';
 import type { MentionOption, UploadFileInfo, UploadInst } from 'naive-ui';
+import { computed, onMounted, ref } from 'vue';
+import { useStore } from 'vuex';
 
-const emit = defineEmits<{
-  (e: 'post-success'): void;
-}>();
+const emit = defineEmits<(e: 'post-success') => void>();
 const props = withDefaults(
   defineProps<{
     lock: number;
@@ -218,7 +210,7 @@ const loadSuggestionUsers = debounce((k) => {
     k,
   })
     .then((res) => {
-      let options: MentionOption[] = [];
+      const options: MentionOption[] = [];
       res.suggest.map((i) => {
         options.push({
           label: i,
@@ -291,7 +283,7 @@ const beforeUpload = async (data: any) => {
 };
 const finishUpload = ({ file, event }: any): any => {
   try {
-    let data = JSON.parse(event.target?.response);
+    const data = JSON.parse(event.target?.response);
 
     if (data.code === 0) {
       if (uploadType.value === 'public/image') {
@@ -307,7 +299,7 @@ const finishUpload = ({ file, event }: any): any => {
 };
 const failUpload = ({ file, event }: any): any => {
   try {
-    let data = JSON.parse(event.target?.response);
+    const data = JSON.parse(event.target?.response);
 
     if (data.code !== 0) {
       let errMsg = data.msg || '上传失败';
@@ -323,7 +315,7 @@ const failUpload = ({ file, event }: any): any => {
   }
 };
 const removeUpload = ({ file }: any) => {
-  let idx = imageContents.value.findIndex((item) => item.id === file.id);
+  const idx = imageContents.value.findIndex((item) => item.id === file.id);
   if (idx > -1) {
     imageContents.value.splice(idx, 1);
   }
@@ -349,7 +341,7 @@ const submitPost = () => {
   }
 
   // 解析用户at
-  let { users } = parsePostTag(content.value);
+  const { users } = parsePostTag(content.value);
 
   const contents = [];
   let sort = 100;
@@ -402,16 +394,14 @@ const triggerAuth = (key: string) => {
         display: flex;
         flex-direction: row;
 
-        .compose-user {
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
+        // Unified input style, full width without avatar
+        .compose-input {
+            width: 100%;
+            text-align: left;
         }
 
         &.compose-options {
-            margin-top: 6px;
-            padding-left: 42px;
+            margin-top: 12px;
             display: flex;
             justify-content: space-between;
 
@@ -459,9 +449,84 @@ const triggerAuth = (key: string) => {
 }
 .attachment-list-wrap {
     margin-top: 12px;
-    margin-left: 42px;
-    .n-upload-file-info__thumbnail {
-        overflow: hidden;
+
+    :deep(.n-upload-file-list) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .n-upload-file {
+            display: block !important;
+            width: 110px;
+            height: 110px;
+            padding: 0 !important;
+            border: none !important;
+            background-color: transparent !important;
+
+            &:hover {
+                background-color: transparent !important;
+            }
+
+            .n-upload-file-info {
+                padding: 0 !important;
+                height: 100%;
+                display: block !important;
+                position: relative;
+
+                .n-upload-file-info__thumbnail {
+                    width: 100% !important;
+                    height: 100% !important;
+                    margin: 0 !important;
+                    border-radius: 8px;
+                    overflow: hidden;
+
+                    img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                }
+
+                .n-upload-file-info__name {
+                    display: none !important;
+                }
+
+                .n-upload-file-info__action {
+                    position: absolute;
+                    top: -6px;
+                    right: -6px;
+                    margin: 0 !important;
+                    z-index: 10;
+
+                    .n-button:nth-last-child(n+2) {
+                        display: none !important;
+                    }
+
+                    .n-button {
+                        background-color: rgba(0, 0, 0, 0.5);
+                        color: white;
+                        border-radius: 50%;
+                        width: 20px;
+                        height: 20px;
+                        min-width: 20px;
+                        padding: 0;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: none;
+
+                        .n-icon {
+                            font-size: 14px;
+                        }
+
+                        &:hover {
+                            background-color: rgba(0, 0, 0, 0.7);
+                            color: white;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 .dark {

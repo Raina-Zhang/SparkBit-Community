@@ -1,9 +1,22 @@
 <template>
     <div>
-        <main-nav :title="title" />
-
+        <div v-if="isTopicDetail" class="topic-header">
+             <div class="nav-row">
+                <n-button text class="back-btn" @click="router.go(-1)">
+                    <template #icon><n-icon size="26"><arrow-back /></n-icon></template>
+                </n-button>
+             </div>
+             <n-card class="topic-info-card" :bordered="false" size="small" embedded>
+                  <div class="topic-content">
+                      <div class="topic-title">#{{ route.query.q }}</div>
+                      <div class="topic-stats" v-if="currentTag">
+                          <span>{{ formatQuoteNum(currentTag.quote_num) }} 热度</span>
+                      </div>
+                  </div>
+              </n-card>
+        </div>
         <n-list class="main-content-wrap" bordered>
-            <n-list-item>
+            <n-list-item v-if="store.state.userInfo.id > 0 && !isTopicDetail">
                 <!-- 发布器 -->
                 <compose @post-success="onPostSuccess" />
             </n-list-item>
@@ -29,25 +42,19 @@
                 </template>
             </SlideBar>
             </n-list-item>
-            <div  class="style-wrap" v-else-if="showTrendsTag">
+            <div  class="style-wrap" v-else-if="showTrendsTag && !isTopicDetail">
             <n-space >
                 <n-button v-if="newestTweetsStyle !== 'newest'" size="small" :bordered="false" @click="onNewestTweets" class="style-item" secondary round>
-                    全部
+                    发现
                 </n-button>
                 <n-button v-if="newestTweetsStyle === 'newest'" size="small" type="success"  :bordered="false" @click="onNewestTweets"  class="style-item" secondary round>
-                    全部
-                </n-button>
-                <n-button v-if="newestTweetsStyle !== 'hots'" size="small" :bordered="false" @click="onHotTweets" class="style-item" secondary round>
-                    热门推荐
-                </n-button>
-                <n-button v-if="newestTweetsStyle === 'hots'" size="small" type="success" :bordered="false" @click="onHotTweets" class="style-item" secondary round>
-                    热门推荐
+                    发现
                 </n-button>
                 <n-button v-if="newestTweetsStyle !== 'following'" size="small" :bordered="false" @click="onFollowingTweets" class="style-item" secondary round>
-                    正在关注
+                    关注
                 </n-button>
                 <n-button v-if="newestTweetsStyle === 'following'" size="small" type="success" :bordered="false" @click="onFollowingTweets" class="style-item" secondary round>
-                    正在关注
+                    关注
                 </n-button>
             </n-space>
             </div>
@@ -87,11 +94,11 @@
         </n-list>
 
         <n-space v-if="totalPage > 0" justify="center">
-            <InfiniteLoading class="load-more" :slots="{ complete: '没有更多泡泡了', error: '加载出错' }" @infinite="nextPage()">
+            <InfiniteLoading class="load-more" :slots="{ complete: '没有更多动态了', error: '加载出错' }" @infinite="nextPage()">
                 <template #spinner>
                     <div class="load-more-wrap">
                         <n-spin :size="14" v-if="!noMore" />
-                        <span class="load-more-spinner">{{ noMore ? '没有更多泡泡了' : '加载更多' }}</span>
+                        <span class="load-more-spinner">{{ noMore ? '没有更多动态了' : '加载更多' }}</span>
                     </div>
                 </template>
             </InfiniteLoading>
@@ -100,22 +107,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed, watch } from 'vue';
-import { useStore } from 'vuex';
-import { useRoute, useRouter } from 'vue-router';
-import { useDialog } from 'naive-ui';
-import InfiniteLoading from 'v3-infinite-loading';
-import { getPosts, getIndexTrends } from '@/api/post';
+import { getIndexTrends, getPosts, getTags } from '@/api/post';
 import {
-  getUserPosts,
   deleteFriend,
   followUser,
+  getUserPosts,
   unfollowUser,
 } from '@/api/user';
-import SlideBar from '@opentiny/vue-slide-bar';
-import allTweets from '@/assets/img/fresh-tweets.png';
 import discoverTweets from '@/assets/img/discover-tweets.jpeg';
 import followingTweets from '@/assets/img/following-tweets.jpeg';
+import allTweets from '@/assets/img/fresh-tweets.png';
+import SlideBar from '@opentiny/vue-slide-bar';
+import { ArrowBack } from '@vicons/ionicons5';
+import { useDialog } from 'naive-ui';
+import InfiniteLoading from 'v3-infinite-loading';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const store = useStore();
 const route = useRoute();
@@ -127,28 +135,17 @@ const onNewestTweets = () => {
   newestTweetsStyle.value = 'newest';
   handleBarClick(slideBarList.value[0], 0);
 };
-const onHotTweets = () => {
-  newestTweetsStyle.value = 'hots';
-  handleBarClick(slideBarList.value[1], 1);
-};
 const onFollowingTweets = () => {
   newestTweetsStyle.value = 'following';
-  handleBarClick(slideBarList.value[2], 2);
+  handleBarClick(slideBarList.value[1], 1);
 };
 
 const initBlocks = ref(9);
 const wheelBlocks = ref(8);
 const slideBarList = ref<Item.SlideBarItem[]>([
-  { title: '最新动态', style: 1, username: '', avatar: allTweets, show: true },
+  { title: '发现', style: 1, username: '', avatar: allTweets, show: true },
   {
-    title: '热门推荐',
-    style: 2,
-    username: '',
-    avatar: discoverTweets,
-    show: false,
-  },
-  {
-    title: '正在关注',
+    title: '关注',
     style: 3,
     username: '',
     avatar: followingTweets,
@@ -180,8 +177,51 @@ const user = reactive<Item.UserInfo>({
   status: 1,
 });
 const inActionPost = ref<Item.PostProps | null>(null);
+const currentTag = ref<Item.TagProps | null>(null);
 
-const title = ref<string>('泡泡广场');
+const pageTitle = computed(() => {
+  if (route.query && route.query.q) {
+    if (route.query.t && route.query.t === 'tag') {
+      return '#' + decodeURIComponent(route.query.q as string);
+    } else {
+      return '搜索: ' + decodeURIComponent(route.query.q as string);
+    }
+  }
+  return 'SparkBit广场';
+});
+
+const isTopicDetail = computed(() => {
+  return route.query.t === 'tag';
+});
+
+const formatQuoteNum = (num: number) => {
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k';
+  }
+  return num;
+};
+
+const loadTagInfo = () => {
+  if (route.query.t === 'tag' && route.query.q) {
+    getTags({ type: 'hot', num: 100 }).then((res) => {
+      const tag = res.topics.find((t) => t.tag === route.query.q);
+      if (tag) {
+        currentTag.value = tag;
+      } else {
+        currentTag.value = {
+          tag: route.query.q as string,
+          quote_num: 0,
+          id: 0,
+          user_id: 0,
+          is_following: 0,
+          is_top: 0,
+          is_pin: 0,
+        } as any;
+      }
+    });
+  }
+};
+
 const loading = ref(false);
 const noMore = ref(false);
 const targetStyle = ref<number>(1);
@@ -259,17 +299,13 @@ const onHandleFriendAction = (post: Item.PostProps) => {
 };
 
 const onHandleFollowAction = (post: Item.PostProps) => {
-  dialog.success({
-    title: '提示',
-    content:
-      '确定' +
-      (post.user.is_following ? '取消关注 @' : '关注 @') +
-      post.user.username +
-      ' 吗？',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: () => {
-      if (post.user.is_following) {
+  if (post.user.is_following) {
+    dialog.success({
+      title: '提示',
+      content: '确定取消关注 @' + post.user.username + ' 吗？',
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: () => {
         unfollowUser({
           user_id: post.user.id,
         })
@@ -278,38 +314,27 @@ const onHandleFollowAction = (post: Item.PostProps) => {
             postFollowAction(post.user_id, false);
           })
           .catch((_err) => {});
-      } else {
-        followUser({
-          user_id: post.user.id,
-        })
-          .then((_res) => {
-            window.$message.success('关注成功');
-            postFollowAction(post.user_id, true);
-          })
-          .catch((_err) => {});
-      }
-    },
-  });
+      },
+    });
+  } else {
+    followUser({
+      user_id: post.user.id,
+    })
+      .then((_res) => {
+        window.$message.success('关注成功');
+        postFollowAction(post.user_id, true);
+      })
+      .catch((_err) => {});
+  }
 };
 
 function postFollowAction(userId: number, isFollowing: boolean) {
-  for (let index in list.value) {
+  for (const index in list.value) {
     if (list.value[index].user_id == userId) {
       list.value[index].user.is_following = isFollowing;
     }
   }
 }
-
-const updateTitle = () => {
-  title.value = '泡泡广场';
-  if (route.query && route.query.q) {
-    if (route.query.t && route.query.t === 'tag') {
-      title.value = '#' + decodeURIComponent(route.query.q as string);
-    } else {
-      title.value = '搜索: ' + decodeURIComponent(route.query.q as string);
-    }
-  }
-};
 
 const showTrendsTag = computed(() => {
   return (
@@ -340,7 +365,6 @@ const handleBarClick = (data: Item.SlideBarItem, index: number) => {
   targetStyle.value = data.style;
   if (route.query.q) {
     route.query.q = null;
-    updateTitle();
   }
   switch (data.style) {
     case 1:
@@ -379,9 +403,9 @@ const loadContacts = () => {
     .then((res) => {
       var i = 0;
       const list = res.list || [];
-      let barItems: Item.SlideBarItem[] = [];
+      const barItems: Item.SlideBarItem[] = [];
       for (; i < list.length; i++) {
-        let item: Item.IndexTrendsItem = list[i];
+        const item: Item.IndexTrendsItem = list[i];
         barItems.push({
           title: item.nickname,
           style: 21,
@@ -502,6 +526,10 @@ const onPostSuccess = (post: Item.PostProps) => {
 };
 
 const loadMorePosts = () => {
+  if (isTopicDetail.value) {
+    loadPosts('newest');
+    return;
+  }
   switch (targetStyle.value) {
     case 1:
       loadPosts('newest');
@@ -538,6 +566,7 @@ onMounted(() => {
   reset();
   loadContacts();
   loadPosts('newest');
+  loadTagInfo();
 });
 
 watch(
@@ -547,12 +576,12 @@ watch(
     refresh: store.state.refresh,
   }),
   (to, from) => {
-    updateTitle();
     if (to.refresh !== from.refresh) {
       reset();
       setTimeout(() => {
         loadContacts();
         loadMorePosts();
+        loadTagInfo();
       }, 0);
       return;
     }
@@ -561,6 +590,7 @@ watch(
       setTimeout(() => {
         loadContacts();
         loadMorePosts();
+        loadTagInfo();
       }, 0);
     }
   },
@@ -571,7 +601,7 @@ watch(
 
 .tiny-slide-bar .tiny-slide-bar__list > 
 div.tiny-slide-bar__select .slide-bar-item .slide-bar-item-title {
-    color: #18a058;
+    color: #6A60FF;
     opacity: 0.8;
 }
 
@@ -579,11 +609,11 @@ div.tiny-slide-bar__select .slide-bar-item .slide-bar-item-title {
 div:hover .slide-bar-item {
     cursor: pointer;
     .slide-bar-item-avatar {
-        color: #18a058;
+        color: #6A60FF;
         opacity: 0.8;
     }
     .slide-bar-item-title {
-        color: #18a058;
+        color: #6A60FF;
         opacity: 0.8;
     }
 }
@@ -644,19 +674,41 @@ div:hover .slide-bar-item {
     }
     .tiny-slide-bar .tiny-slide-bar__list > 
     div.tiny-slide-bar__select .slide-bar-item .slide-bar-item-title {
-        color: #63e2b7;
+        color: #6A60FF;
         opacity: 0.8;
     }
 
     .tiny-slide-bar .tiny-slide-bar__list > 
     div:hover .slide-bar-item .slide-bar-item-title {
-        color: #63e2b7;
+        color: #6A60FF;
         opacity: 0.8;
     }
 
     .tiny-slide-bar {
         --ti-slider-progress-box-arrow-hover-text-color: #f2f2f2;
         --ti-slider-progress-box-arrow-normal-text-color: #808080;
+    }
+}
+
+.topic-header {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    .nav-row {
+        margin-bottom: 10px;
+        padding-left: 4px;
+    }
+    .topic-info-card {
+        border-radius: 8px;
+        .topic-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #6A60FF;
+            margin-bottom: 4px;
+        }
+        .topic-stats {
+            font-size: 13px;
+            opacity: 0.7;
+        }
     }
 }
 </style>

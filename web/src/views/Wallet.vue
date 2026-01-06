@@ -144,14 +144,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useStore } from 'vuex';
-import { useRoute } from 'vue-router';
-import QRCode from 'qrcode';
-import { LogoAlipay } from '@vicons/ionicons5';
 import { userInfo } from '@/api/auth';
-import { reqRecharge, getRecharge, getBills } from '@/api/user';
+import { getBills, getRecharge, reqRecharge } from '@/api/user';
 import { formatRelativeTime } from '@/utils/formatTime';
+import { LogoAlipay } from '@vicons/ionicons5';
+import QRCode from 'qrcode';
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useStore } from 'vuex';
 
 const store = useStore();
 const route = useRoute();

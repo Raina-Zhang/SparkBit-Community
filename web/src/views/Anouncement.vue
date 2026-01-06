@@ -43,10 +43,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useStore } from 'vuex';
-import { useRoute } from 'vue-router';
 import { formatRelativeTime } from '@/utils/formatTime';
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useStore } from 'vuex';
 
 const store = useStore();
 const route = useRoute();

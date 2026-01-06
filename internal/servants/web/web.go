@@ -24,6 +24,7 @@ var (
 	_ac                   core.AppCache
 	_wc                   core.WebCache
 	_oss                  core.ObjectStorageService
+	_ls                   core.LiveService
 	_onceInitial          sync.Once
 )
 
@@ -36,7 +37,7 @@ func RouteWeb(e *gin.Engine) {
 	api.RegisterCoreServant(e, newCoreSrv(ds, _oss, _wc))
 	api.RegisterRelaxServant(e, newRelaxSrv(ds, _wc), newRelaxChain())
 	api.RegisterLooseServant(e, newLooseSrv(ds, _ac))
-	api.RegisterPrivServant(e, newPrivSrv(ds, _oss), newPrivChain())
+	api.RegisterPrivServant(e, newPrivSrv(ds, _oss, _ls), newPrivChain())
 	api.RegisterPubServant(e, newPubSrv(ds))
 	api.RegisterTrendsServant(e, newTrendsSrv(ds))
 	api.RegisterFollowshipServant(e, newFollowshipSrv(ds))
@@ -61,6 +62,7 @@ func lazyInitial() {
 		_maxCaptchaTimes = conf.AppSetting.MaxCaptchaTimes
 		_oss = dao.ObjectStorageService()
 		_ds = dao.DataService()
+		_ls = dao.LiveService()
 		_ac = cache.NewAppCache()
 		_wc = cache.NewWebCache()
 	})

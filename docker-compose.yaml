@@ -78,6 +78,20 @@ services:
     networks:
       - paopao-network
 
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    restart: always
+    ports:
+      - 7880:7880
+      - 7881:7881
+      - 50000-50200:50000-50200/udp
+    volumes:
+      - ./custom/livekit.yaml:/etc/livekit.yaml
+    networks:
+      - paopao-network
+
+
   # meilisearch-ui:
   #   image: riccoxie/meilisearch-ui:latest
   #   restart: always

@@ -53,11 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { followTopic, pinTopic, stickTopic, unfollowTopic } from '@/api/post';
+import defaultUserAvatar from '@/assets/img/logo.png';
 import { MoreVertOutlined } from '@vicons/material';
 import type { DropdownOption } from 'naive-ui';
-import { pinTopic, stickTopic, followTopic, unfollowTopic } from '@/api/post';
-import defaultUserAvatar from '@/assets/img/logo.png';
+import { computed, onMounted, ref } from 'vue';
 
 const hasFollowing = ref(false);
 const props = withDefaults(
@@ -79,7 +79,7 @@ const tagUserAvatar = computed(() => {
 });
 
 const tagOptions = computed(() => {
-  let options: DropdownOption[] = [];
+  const options: DropdownOption[] = [];
   if (props.tag.is_following === 0) {
     options.push({
       label: '关注',

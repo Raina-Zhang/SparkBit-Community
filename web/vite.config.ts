@@ -1,7 +1,7 @@
-import { defineConfig, type PluginOption } from 'vite';
 import path from 'path';
 import vue from '@vitejs/plugin-vue';
 import Components from 'unplugin-vue-components/vite';
+import { type PluginOption, defineConfig } from 'vite';
 
 import { visualizer } from 'rollup-plugin-visualizer';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';

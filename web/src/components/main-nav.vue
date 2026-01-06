@@ -40,37 +40,22 @@
                 </n-button>
 
                 {{ props.title }}
-
-                <n-switch
-                    v-if="props.theme"
-                    :value="store.state.theme === 'dark'"
-                    @update:value="switchTheme"
-                    size="small"
-                    class="theme-switch-wrap"
-                >
-                    <template #checked-icon>
-                        <n-icon :component="DarkModeOutlined" />
-                    </template>
-                    <template #unchecked-icon>
-                        <n-icon :component="LightModeOutlined" />
-                    </template>
-                </n-switch>
             </div>
         </template>
     </n-card>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import { useMessage, useOsTheme, DrawerPlacement } from 'naive-ui';
 import {
-  LightModeOutlined,
-  DarkModeOutlined,
   ChevronLeftRound,
+  DarkModeOutlined,
   DehazeRound,
+  LightModeOutlined,
 } from '@vicons/material';
+import { type DrawerPlacement, useMessage, useOsTheme } from 'naive-ui';
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const store = useStore();
 const router = useRouter();

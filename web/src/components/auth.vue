@@ -154,10 +154,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { useStore } from 'vuex';
-import { userLogin, userRegister, userInfo } from '@/api/auth';
+import { userInfo, userLogin, userRegister } from '@/api/auth';
 import type { FormInst, FormItemRule } from 'naive-ui';
+import { onMounted, reactive, ref } from 'vue';
+import { useStore } from 'vuex';
 
 const store = useStore();
 

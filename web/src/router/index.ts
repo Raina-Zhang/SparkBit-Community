@@ -14,7 +14,7 @@ const routes = [
     path: '/post',
     name: 'post',
     meta: {
-      title: '泡泡详情',
+      title: '动态详情',
     },
     component: () => import('@/views/Post.vue'),
   },
@@ -38,7 +38,7 @@ const routes = [
     path: '/profile',
     name: 'profile',
     meta: {
-      title: '主页',
+      title: '个人主页',
     },
     component: () => import('@/views/Profile.vue'),
   },
@@ -99,6 +99,14 @@ const routes = [
     component: () => import('@/views/Setting.vue'),
   },
   {
+    path: '/live',
+    name: 'live',
+    meta: {
+      title: '直播',
+    },
+    component: () => import('@/views/Live.vue'),
+  },
+  {
     path: '/404',
     name: '404',
     meta: {
@@ -118,7 +126,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  document.title = `${to.meta.title} | 泡泡 - 一个清新文艺的微社区`;
+  document.title = `${to.meta.title} | SparkBit社区`;
   next();
 });
 

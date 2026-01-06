@@ -42,6 +42,7 @@ type Priv interface {
 	DownloadAttachment(*web.DownloadAttachmentReq) (*web.DownloadAttachmentResp, error)
 	DownloadAttachmentPrecheck(*web.DownloadAttachmentPrecheckReq) (*web.DownloadAttachmentPrecheckResp, error)
 	UploadAttachment(*web.UploadAttachmentReq) (*web.UploadAttachmentResp, error)
+	GetLiveToken(*web.LiveTokenReq) (*web.LiveTokenResp, error)
 
 	mustEmbedUnimplementedPrivServant()
 }
@@ -404,6 +405,20 @@ func RegisterPrivServant(e *gin.Engine, s Priv, m ...PrivChain) {
 		resp, err := s.UploadAttachment(req)
 		s.Render(c, resp, err)
 	})
+	router.Handle("POST", "live/token", func(c *gin.Context) {
+		select {
+		case <-c.Request.Context().Done():
+			return
+		default:
+		}
+		req := new(web.LiveTokenReq)
+		if err := s.Bind(c, req); err != nil {
+			s.Render(c, nil, err)
+			return
+		}
+		resp, err := s.GetLiveToken(req)
+		s.Render(c, resp, err)
+	})
 }
 
 // UnimplementedPrivServant can be embedded to have forward compatible implementations.
@@ -506,6 +521,10 @@ func (UnimplementedPrivServant) DownloadAttachmentPrecheck(req *web.DownloadAtta
 }
 
 func (UnimplementedPrivServant) UploadAttachment(req *web.UploadAttachmentReq) (*web.UploadAttachmentResp, error) {
+	return nil, mir.Errorln(http.StatusNotImplemented, http.StatusText(http.StatusNotImplemented))
+}
+
+func (UnimplementedPrivServant) GetLiveToken(req *web.LiveTokenReq) (*web.LiveTokenResp, error) {
 	return nil, mir.Errorln(http.StatusNotImplemented, http.StatusText(http.StatusNotImplemented))
 }
 

@@ -1,4 +1,4 @@
-declare module NetParams {
+declare namespace NetParams {
   interface AuthUserLogin {
     /** 用户名 */
     username: string;
@@ -35,7 +35,7 @@ declare module NetParams {
     id: number;
   }
 
-  interface UserGetUnreadMsgCount {}
+  type UserGetUnreadMsgCount = {};
 
   interface ReadMessageReq {
     id: number;
@@ -68,7 +68,7 @@ declare module NetParams {
     status: number;
   }
 
-  interface SiteInfoReq {}
+  type SiteInfoReq = {};
 
   interface FollowUserReq {
     user_id: number;
@@ -97,7 +97,7 @@ declare module NetParams {
     imgCaptcha: string;
   }
 
-  interface UserGetCaptcha {}
+  type UserGetCaptcha = {};
 
   interface UserWhisper {
     user_id: number;
@@ -214,7 +214,7 @@ declare module NetParams {
     page_size?: number;
   }
 
-  interface GetContacts {}
+  type GetContacts = {};
 
   interface PostCreatePost {
     /** 帖子内容列表 */

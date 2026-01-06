@@ -32,9 +32,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { getContacts } from '@/api/post';
 import InfiniteLoading from 'v3-infinite-loading';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -82,7 +82,7 @@ onMounted(() => {
   loadContacts();
 });
 
-const loadContacts = (scrollToBottom: boolean = false) => {
+const loadContacts = (scrollToBottom = false) => {
   if (list.value.length === 0) {
     loading.value = true;
   }

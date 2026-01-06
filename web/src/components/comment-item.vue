@@ -127,13 +127,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import { parsePostTag } from '@/utils/content';
-import { Trash, ArrowBarToUp, ArrowBarDown } from '@vicons/tabler';
 import { deleteComment, highlightComment } from '@/api/post';
 import { YesNoEnum } from '@/utils/IEnum';
+import { parsePostTag } from '@/utils/content';
+import { ArrowBarDown, ArrowBarToUp, Trash } from '@vicons/tabler';
+import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const store = useStore();
 const router = useRouter();
@@ -141,9 +141,7 @@ const replyAtUserID = ref(0);
 const replyAtUsername = ref('');
 const replyComposeRef = ref();
 
-const emit = defineEmits<{
-  (e: 'reload'): void;
-}>();
+const emit = defineEmits<(e: 'reload') => void>();
 const props = withDefaults(
   defineProps<{
     comment: Item.CommentProps;
@@ -153,7 +151,7 @@ const props = withDefaults(
 );
 
 const comment = computed(() => {
-  let comment: Item.CommentComponentProps = Object.assign(
+  const comment: Item.CommentComponentProps = Object.assign(
     {
       texts: [],
       imgs: [],
@@ -172,7 +170,7 @@ const comment = computed(() => {
 });
 
 const doClickText = (e: MouseEvent, id: number | string) => {
-  let _target = e.target as any;
+  const _target = e.target as any;
   if (_target.dataset.detail) {
     const d = _target.dataset.detail.split(':');
     if (d.length === 2) {

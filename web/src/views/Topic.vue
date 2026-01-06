@@ -3,17 +3,6 @@
         <main-nav title="话题" />
 
         <n-list class="main-content-wrap tags-wrap" bordered>
-            <n-tabs type="line" animated @update:value="changeTab">
-                <n-tab-pane name="hot" tab="热门" />
-                <n-tab-pane name="new" tab="最新" />
-                <n-tab-pane name="follow" tab="关注" v-if="store.state.userLogined" />
-                <n-tab-pane name="pin" tab="钉住" v-if="store.state.userLogined" />
-                <template v-if="store.state.userLogined" #suffix>
-                    <n-tag v-model:checked="tagsChecked" checkable>
-                        {{tagsEditText}}
-                    </n-tag>
-                </template>
-            </n-tabs>
             <n-spin :show="loading">
                 <n-space>
                     <tag-item
@@ -34,8 +23,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
 import { getTags } from '@/api/post';
+import { onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 
 const store = useStore();
@@ -46,24 +35,6 @@ const tagsChecked = ref(false);
 const inFollowTab = ref(false);
 const inPinTab = ref(false);
 
-watch(tagsChecked, () => {
-  if (!tagsChecked.value) {
-    window.$message.success('保存成功');
-    store.commit('refreshTopicFollow');
-  }
-});
-const tagsEditText = computed({
-  get: () => {
-    let text = '编辑';
-    if (tagsChecked.value) {
-      text = '保存';
-    }
-    return text;
-  },
-  set: (newVal) => {
-    // do nothing
-  },
-});
 const loadTags = () => {
   loading.value = true;
   getTags({
@@ -80,12 +51,7 @@ const loadTags = () => {
       loading.value = false;
     });
 };
-const changeTab = (tab: 'hot' | 'new' | 'follow' | 'pin') => {
-  tagType.value = tab;
-  inFollowTab.value = tab === 'follow';
-  inPinTab.value = tab === 'pin';
-  loadTags();
-};
+
 onMounted(() => {
   loadTags();
 });

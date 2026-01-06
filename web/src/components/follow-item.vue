@@ -56,20 +56,18 @@
 </template>
 
 <script setup lang="ts">
-import { h, computed } from 'vue';
-import { NIcon } from 'naive-ui';
-import type { Component } from 'vue';
-import { useDialog, DropdownOption } from 'naive-ui';
 import { followUser, unfollowUser } from '@/api/user';
 import { formatDate } from '@/utils/formatTime';
+import { BodyOutline, PaperPlaneOutline, WalkOutline } from '@vicons/ionicons5';
 import { MoreHorizFilled } from '@vicons/material';
-import { PaperPlaneOutline, BodyOutline, WalkOutline } from '@vicons/ionicons5';
+import { NIcon } from 'naive-ui';
+import { type DropdownOption, useDialog } from 'naive-ui';
+import { computed, h } from 'vue';
+import type { Component } from 'vue';
 
 const dialog = useDialog();
 
-const emit = defineEmits<{
-  (e: 'send-whisper', user: Item.UserInfo): void;
-}>();
+const emit = defineEmits<(e: 'send-whisper', user: Item.UserInfo) => void>();
 
 const renderIcon = (icon: Component) => {
   return () => {
@@ -125,7 +123,7 @@ const props = withDefaults(
 );
 
 const actionOpts = computed(() => {
-  let options: DropdownOption[] = [
+  const options: DropdownOption[] = [
     {
       label: '私信 @' + props.contact.username,
       key: 'whisper',

@@ -2,25 +2,19 @@
     <div>
         <div class="compose-wrap" v-if="store.state.userInfo.id > 0">
             <div class="compose-line">
-                <div class="compose-user">
-                    <n-avatar
-                        round
-                        :size="30"
-                        :src="store.state.userInfo.avatar"
-                    />
-                </div>
                 <n-mention
+                    class="compose-input"
                     type="textarea"
                     size="large"
                     autosize
-                    :bordered="false"
+                    :bordered="true"
                     :loading="loading"
                     :value="content"
                     :prefix="['@', '#']"
                     :options="optionsRef"
                     @search="handleSearch"
                     @update:value="changeContent"
-                    placeholder="说说您的新鲜事..."
+                    placeholder="分享币圈内容，说说你的市场观点"
                 />
             </div>
 
@@ -75,14 +69,10 @@
                         </n-upload-trigger>
 
                         <n-upload-trigger
-                          v-if="store.state.profile.allowTweetVideo"
+                          v-if="false"
                           #="{ handleClick }" abstract>
                             <n-button
-                                :disabled="
-                                    (fileQueue.length > 0 &&
-                                        uploadType !== 'public/video') ||
-                                    fileQueue.length === 9
-                                "
+                                :disabled="true"
                                 @click="
                                     () => {
                                         setUploadType('public/video');
@@ -105,14 +95,10 @@
                         </n-upload-trigger>
 
                         <n-upload-trigger
-                          v-if="store.state.profile.allowTweetAttachment"
+                          v-if="false"
                           #="{ handleClick }" abstract>
                             <n-button
-                                :disabled="
-                                    (fileQueue.length > 0 &&
-                                        uploadType === 'public/video') ||
-                                    fileQueue.length === 9
-                                "
+                                :disabled="true"
                                 @click="
                                     () => {
                                         setUploadType('attachment');
@@ -134,18 +120,24 @@
                             </n-button>
                         </n-upload-trigger>
 
-                        <n-button
-                            quaternary
-                            circle
-                            type="primary"
-                            @click.stop="switchLink"
+                        <n-dropdown
+                            trigger="hover"
+                            :options="tagDropdownOptions"
+                            @select="handleTagSelect"
                         >
-                            <template #icon>
-                                <n-icon size="20" color="var(--primary-color)">
-                                    <compass-outline />
-                                </n-icon>
-                            </template>
-                        </n-button>
+                            <n-button
+                                quaternary
+                                circle
+                                type="primary"
+                            >
+                                <template #icon>
+                                    <n-icon size="20" color="var(--primary-color)">
+                                        <hash />
+                                    </n-icon>
+                                </template>
+                            </n-button>
+                        </n-dropdown>
+
 
                          <n-button
                             v-if="allowTweetVisibility"
@@ -176,6 +168,16 @@
                             </template>
                             已输入{{ content.length }}字
                         </n-tooltip>
+
+                        <n-button
+                            @click="() => {}"
+                            type="primary"
+                            secondary
+                            round
+                            style="margin-right: 8px"
+                        >
+                            写文章
+                        </n-button>
 
                         <n-button
                             :loading="submitting"
@@ -223,16 +225,6 @@
                 </n-radio-group>
             </div>
 
-            <div class="link-wrap" v-if="showLinkSet">
-                <n-dynamic-input
-                    v-model:value="links"
-                    placeholder="请输入以http(s)://开头的链接"
-                    :min="0"
-                    :max="3"
-                >
-                    <template #create-button-default> 创建链接 </template>
-                </n-dynamic-input>
-            </div>
         </div>
 
         <div class="compose-wrap" v-else>
@@ -275,34 +267,97 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useStore } from 'vuex';
+import { getSuggestTags, getSuggestUsers } from '@/api/user';
 import { debounce } from 'lodash';
-import { getSuggestUsers, getSuggestTags } from '@/api/user';
+import { computed, onMounted, ref } from 'vue';
+import { useStore } from 'vuex';
 
-import {
-  ImageOutline,
-  VideocamOutline,
-  AttachOutline,
-  CompassOutline,
-  EyeOutline,
-} from '@vicons/ionicons5';
-import { createPost } from '@/api/post';
+import { createPost, getTags } from '@/api/post';
+import { PostItemTypeEnum, VisibilityEnum } from '@/utils/IEnum';
 import { parsePostTag } from '@/utils/content';
 import { isZipFile } from '@/utils/isZipFile';
+import {
+  AttachOutline,
+  EyeOutline,
+  ImageOutline,
+  VideocamOutline,
+} from '@vicons/ionicons5';
+import { Hash } from '@vicons/tabler';
 import type { MentionOption, UploadFileInfo, UploadInst } from 'naive-ui';
-import { VisibilityEnum, PostItemTypeEnum } from '@/utils/IEnum';
 
-const emit = defineEmits<{
-  (e: 'post-success', post: Item.PostProps): void;
-}>();
+const emit = defineEmits<(e: 'post-success', post: Item.PostProps) => void>();
 
 const store = useStore();
 
 const optionsRef = ref<MentionOption[]>([]);
+const tagDropdownOptions = ref<{ label: string; key: string }[]>([]);
+const loadTags = () => {
+  getTags({
+    type: 'hot_extral',
+    num: 10,
+    extral_num: 0,
+  })
+    .then((res) => {
+      const options: { label: string; key: string }[] = [];
+      if (res.topics && res.topics.length > 0) {
+        res.topics.map((t) => {
+          options.push({
+            label: t.tag,
+            key: t.tag,
+          });
+        });
+      }
+
+      // Add mock tags if options are empty or few
+      const mockTags = [
+        'Bitcoin',
+        'Ethereum',
+        'Web3',
+        'DeFi',
+        'NFT',
+        'GameFi',
+        'Metaverse',
+        'DAO',
+        'Layer2',
+        'ZK-Rollup',
+      ];
+
+      mockTags.forEach((tag) => {
+        if (!options.some((o) => o.key === tag)) {
+          options.push({
+            label: tag,
+            key: tag,
+          });
+        }
+      });
+
+      tagDropdownOptions.value = options;
+    })
+    .catch((err) => {
+      // Fallback to mock tags on error
+      const mockTags = [
+        'Bitcoin',
+        'Ethereum',
+        'Web3',
+        'DeFi',
+        'NFT',
+        'GameFi',
+        'Metaverse',
+        'DAO',
+        'Layer2',
+        'ZK-Rollup',
+      ];
+      tagDropdownOptions.value = mockTags.map((tag) => ({
+        label: tag,
+        key: tag,
+      }));
+    });
+};
+const handleTagSelect = (key: string) => {
+  content.value += ` #${key} `;
+};
 const loading = ref(false);
 const submitting = ref(false);
-const showLinkSet = ref(false);
 const showEyeSet = ref(false);
 const content = ref('');
 const links = ref([]);
@@ -327,7 +382,7 @@ const uploadToken = computed(() => {
 });
 
 const visibilities = computed(() => {
-  let res = [
+  const res = [
     { value: VisibilityEnum.PUBLIC, label: '公开' },
     { value: VisibilityEnum.PRIVATE, label: '私密' },
     { value: VisibilityEnum.Following, label: '关注可见' },
@@ -338,18 +393,8 @@ const visibilities = computed(() => {
   return res;
 });
 
-const switchLink = () => {
-  showLinkSet.value = !showLinkSet.value;
-  if (showLinkSet.value && showEyeSet.value) {
-    showEyeSet.value = false;
-  }
-};
-
 const switchEye = () => {
   showEyeSet.value = !showEyeSet.value;
-  if (showEyeSet.value && showLinkSet.value) {
-    showLinkSet.value = false;
-  }
 };
 
 // 加载at用户列表
@@ -358,7 +403,7 @@ const loadSuggestionUsers = debounce((k) => {
     k,
   })
     .then((res) => {
-      let options: MentionOption[] = [];
+      const options: MentionOption[] = [];
       res.suggest.map((i) => {
         options.push({
           label: i,
@@ -379,7 +424,7 @@ const loadSuggestionTags = debounce((k) => {
     k,
   })
     .then((res) => {
-      let options: MentionOption[] = [];
+      const options: MentionOption[] = [];
       res.suggest.map((i) => {
         options.push({
           label: i,
@@ -481,7 +526,7 @@ const beforeUpload = async (data: any) => {
 };
 const finishUpload = ({ file, event }: any): any => {
   try {
-    let data = JSON.parse(event.target?.response);
+    const data = JSON.parse(event.target?.response);
 
     if (data.code === 0) {
       if (uploadType.value === 'public/image') {
@@ -509,7 +554,7 @@ const finishUpload = ({ file, event }: any): any => {
 };
 const failUpload = ({ file, event }: any): any => {
   try {
-    let data = JSON.parse(event.target?.response);
+    const data = JSON.parse(event.target?.response);
 
     if (data.code !== 0) {
       let errMsg = data.msg || '上传失败';
@@ -547,7 +592,7 @@ const submitPost = () => {
   }
 
   // 解析用户at及tag
-  let { tags, users } = parsePostTag(content.value);
+  const { tags, users } = parsePostTag(content.value);
 
   const contents = [];
   let sort = 100;
@@ -607,7 +652,6 @@ const submitPost = () => {
       emit('post-success', res);
 
       // 置空
-      showLinkSet.value = false;
       showEyeSet.value = false;
       uploadRef.value?.clear();
       fileQueue.value = [];
@@ -627,6 +671,7 @@ const triggerAuth = (key: string) => {
   store.commit('triggerAuthKey', key);
 };
 onMounted(() => {
+  loadTags();
   const defaultVisibility = store.state.profile.defaultTweetVisibility;
   if (store.state.profile.useFriendship && defaultVisibility === 'friend') {
     defaultVisitType.value = VisibilityEnum.FRIEND;
@@ -651,16 +696,13 @@ onMounted(() => {
         display: flex;
         flex-direction: row;
 
-        .compose-user {
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
+        .compose-input {
+            width: 100%;
+            text-align: left;
         }
 
         &.compose-options {
-            margin-top: 6px;
-            padding-left: 42px;
+            margin-top: 12px;
             display: flex;
             justify-content: space-between;
 
@@ -707,9 +749,84 @@ onMounted(() => {
 }
 .attachment-list-wrap {
     margin-top: 12px;
-    margin-left: 42px;
-    .n-upload-file-info__thumbnail {
-        overflow: hidden;
+
+    .n-upload-file-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .n-upload-file {
+            display: block !important;
+            width: 110px;
+            height: 110px;
+            padding: 0 !important;
+            border: none !important;
+            background-color: transparent !important;
+
+            &:hover {
+                background-color: transparent !important;
+            }
+
+            .n-upload-file-info {
+                padding: 0 !important;
+                height: 100%;
+                display: block !important;
+                position: relative;
+
+                .n-upload-file-info__thumbnail {
+                    width: 100% !important;
+                    height: 100% !important;
+                    margin: 0 !important;
+                    border-radius: 8px;
+                    overflow: hidden;
+
+                    img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                }
+
+                .n-upload-file-info__name {
+                    display: none !important;
+                }
+
+                .n-upload-file-info__action {
+                    position: absolute;
+                    top: -6px;
+                    right: -6px;
+                    margin: 0 !important;
+                    z-index: 10;
+
+                    .n-button:nth-last-child(n+2) {
+                        display: none !important;
+                    }
+
+                    .n-button {
+                        background-color: rgba(0, 0, 0, 0.5);
+                        color: white;
+                        border-radius: 50%;
+                        width: 20px;
+                        height: 20px;
+                        min-width: 20px;
+                        padding: 0;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: none;
+
+                        .n-icon {
+                            font-size: 14px;
+                        }
+
+                        &:hover {
+                            background-color: rgba(0, 0, 0, 0.7);
+                            color: white;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 .dark {

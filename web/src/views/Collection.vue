@@ -47,12 +47,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useStore } from 'vuex';
-import { useRoute } from 'vue-router';
+import { followUser, getCollections, unfollowUser } from '@/api/user';
 import { useDialog } from 'naive-ui';
 import InfiniteLoading from 'v3-infinite-loading';
-import { getCollections, followUser, unfollowUser } from '@/api/user';
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useStore } from 'vuex';
 
 const store = useStore();
 const route = useRoute();
@@ -120,7 +120,7 @@ const onHandleFollowAction = (post: Item.PostProps) => {
 };
 
 function postFollowAction(userId: number, isFollowing: boolean) {
-  for (let index in list.value) {
+  for (const index in list.value) {
     if (list.value[index].user_id == userId) {
       list.value[index].user.is_following = isFollowing;
     }

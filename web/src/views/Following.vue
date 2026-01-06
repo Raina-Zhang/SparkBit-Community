@@ -4,7 +4,7 @@
 
         <n-list class="main-content-wrap" bordered>
             <n-tabs type="line" animated :default-value="tabler" @update:value="changeTab">
-                <n-tab-pane name="follows" tab="正在关注" />
+                <n-tab-pane name="follows" tab="关注" />
                 <n-tab-pane name="followings" tab="我的粉丝" />
             </n-tabs>
             <div v-if="loading && list.length === 0" class="skeleton-wrap">
@@ -36,9 +36,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { getUserFollows, getUserFollowings } from '@/api/user';
+import { getUserFollowings, getUserFollows } from '@/api/user';
 import InfiniteLoading from 'v3-infinite-loading';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -115,7 +115,7 @@ const loadPage = () => {
   }
 };
 
-const loadFollows = (username: string, scrollToBottom: boolean = false) => {
+const loadFollows = (username: string, scrollToBottom = false) => {
   if (list.value.length === 0) {
     loading.value = true;
   }
@@ -149,7 +149,7 @@ const loadFollows = (username: string, scrollToBottom: boolean = false) => {
     });
 };
 
-const loadFollowings = (username: string, scrollToBottom: boolean = false) => {
+const loadFollowings = (username: string, scrollToBottom = false) => {
   if (list.value.length === 0) {
     loading.value = true;
   }

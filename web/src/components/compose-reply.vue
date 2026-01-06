@@ -54,22 +54,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useStore } from 'vuex';
-import { formatPrettyTime } from '@/utils/formatTime';
 import {
   createCommentReply,
-  thumbsUpTweetComment,
   thumbsDownTweetComment,
+  thumbsUpTweetComment,
 } from '@/api/post';
-import { InputInst } from 'naive-ui';
-import {
-  ThumbUpTwotone,
-  ThumbUpOutlined,
-  ThumbDownTwotone,
-  ThumbDownOutlined,
-} from '@vicons/material';
 import { YesNoEnum } from '@/utils/IEnum';
+import { formatPrettyTime } from '@/utils/formatTime';
+import {
+  ThumbDownOutlined,
+  ThumbDownTwotone,
+  ThumbUpOutlined,
+  ThumbUpTwotone,
+} from '@vicons/material';
+import type { InputInst } from 'naive-ui';
+import { ref } from 'vue';
+import { useStore } from 'vuex';
 
 const props = withDefaults(
   defineProps<{
@@ -229,7 +229,7 @@ defineExpose({ switchReply });
 
         .reply-switch {
             .show {
-                color: #63e2b7;
+                color: #6A60FF;
             }
         }
     }

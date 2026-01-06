@@ -1,6 +1,6 @@
 <template>
     <div>
-        <main-nav title="泡泡详情" :back="true" />
+        <main-nav title="动态详情" :back="true" />
 
         <n-list class="main-content-wrap" bordered>
             <n-list-item>
@@ -14,14 +14,7 @@
                 </n-spin>
             </n-list-item>
             <div class="comment-opts-wrap" v-if="post.id > 0">
-                <n-tabs type="bar" justify-content="end" size="small" tab-style="margin-left: -24px;" animated @update:value="commentTab">
-                    <template #prefix>
-                        <span class="comment-title-item">评论</span>
-                    </template>
-                    <n-tab-pane name="default" tab="推荐" />
-                    <n-tab-pane name="hots" tab="热门" />
-                    <n-tab-pane name="newest" tab="最新" />
-                </n-tabs>
+                <div class="comment-title-item">评论</div>
             </div>
             <n-list-item v-if="post.id > 0">
                 <compose-comment :lock="post.is_lock" :post-id="post.id" @post-success="reloadComments" />
@@ -58,10 +51,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
 import { getPost, getPostComments } from '@/api/post';
 import InfiniteLoading from 'v3-infinite-loading';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import 'v3-infinite-loading/lib/style.css';
 
 const route = useRoute();
@@ -156,6 +149,105 @@ const loadDefaultComments = ($state: any) => {
           defaultComments.value.push(...res.list);
         }
         comments.value = defaultComments.value;
+      } else if (defaultCommmentsPage === 1) {
+        // Mock data for demonstration when no comments exist
+        const mockComments: Item.CommentProps[] = [
+          {
+            id: 1001,
+            post_id: post.value.id,
+            user_id: 1001,
+            user: {
+              id: 1001,
+              username: 'mockuser1',
+              nickname: 'Mock User 1',
+              avatar:
+                'https://assets.paopao.info/public/avatar/default/zoe.png',
+              is_admin: false,
+              is_avatar: 1,
+            } as any,
+            contents: [
+              {
+                id: 2001,
+                comment_id: 1001,
+                user_id: 1001,
+                type: 2,
+                content: '这是一条测试评论，用于展示mock数据效果。',
+                sort: 0,
+                created_on: Math.floor(Date.now() / 1000) - 3600,
+              },
+            ],
+            replies: [],
+            ip_loc: 'Mars',
+            is_essence: 0,
+            thumbs_up_count: 5,
+            is_thumbs_up: 0,
+            is_thumbs_down: 0,
+            created_on: Math.floor(Date.now() / 1000) - 3600,
+          },
+          {
+            id: 1002,
+            post_id: post.value.id,
+            user_id: 1002,
+            user: {
+              id: 1002,
+              username: 'mockuser2',
+              nickname: 'Mock User 2',
+              avatar:
+                'https://assets.paopao.info/public/avatar/default/william.png',
+              is_admin: false,
+              is_avatar: 1,
+            } as any,
+            contents: [
+              {
+                id: 2002,
+                comment_id: 1002,
+                user_id: 1002,
+                type: 2,
+                content: '另一条测试评论，带有一些回复。',
+                sort: 0,
+                created_on: Math.floor(Date.now() / 1000) - 7200,
+              },
+            ],
+            replies: [
+              {
+                id: 3001,
+                comment_id: 1002,
+                user_id: 1003,
+                user: {
+                  id: 1003,
+                  username: 'replyuser',
+                  nickname: 'Reply User',
+                  avatar:
+                    'https://assets.paopao.info/public/avatar/default/walter.png',
+                  is_avatar: 1,
+                } as any,
+                at_user_id: 1002,
+                at_user: {
+                  id: 1002,
+                  username: 'mockuser2',
+                  nickname: 'Mock User 2',
+                  avatar:
+                    'https://assets.paopao.info/public/avatar/default/william.png',
+                  is_avatar: 1,
+                } as any,
+                content: '这是一个回复',
+                ip_loc: 'Moon',
+                thumbs_up_count: 2,
+                is_thumbs_up: 0,
+                is_thumbs_down: 0,
+                created_on: Math.floor(Date.now() / 1000) - 1800,
+              },
+            ],
+            ip_loc: 'Venus',
+            is_essence: 1,
+            thumbs_up_count: 12,
+            is_thumbs_up: 1,
+            is_thumbs_down: 0,
+            created_on: Math.floor(Date.now() / 1000) - 7200,
+          },
+        ];
+        defaultComments.value = mockComments;
+        comments.value = defaultComments.value;
       }
       stateHandler.loaded();
       commentLoading.value = false;
@@ -167,7 +259,7 @@ const loadDefaultComments = ($state: any) => {
 };
 
 let hotsCommmentsPage = 1;
-let hotsNoMore = ref<boolean>(false);
+const hotsNoMore = ref<boolean>(false);
 const hotsComments = ref<Item.CommentProps[]>([]);
 const loadHotsComments = ($state: any) => {
   if (hotsNoMore.value) {
@@ -206,7 +298,7 @@ const loadHotsComments = ($state: any) => {
 };
 
 let newestCommmentsPage = 1;
-let newestNoMore = ref<boolean>(false);
+const newestNoMore = ref<boolean>(false);
 const newestComments = ref<Item.CommentProps[]>([]);
 const loadNewestComments = ($state: any) => {
   if (newestNoMore.value) {

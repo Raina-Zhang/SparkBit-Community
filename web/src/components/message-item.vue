@@ -137,33 +137,33 @@
 </template>
 
 <script setup lang="ts">
-import { h, computed } from 'vue';
-import type { Component } from 'vue';
-import { NIcon, useDialog } from 'naive-ui';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import { DropdownOption } from 'naive-ui';
 import {
-  ShareOutline,
-  CheckmarkOutline,
-  CloseOutline,
-  CheckmarkDoneOutline,
-} from '@vicons/ionicons5';
-import {
-  readMessage,
   addFriend,
-  rejectFriend,
   followUser,
+  readMessage,
+  rejectFriend,
   unfollowUser,
 } from '@/api/user';
 import { formatRelativeTime } from '@/utils/formatTime';
-import { MoreHorizFilled } from '@vicons/material';
 import {
-  PaperPlaneOutline,
-  CheckmarkCircle,
+  CheckmarkDoneOutline,
+  CheckmarkOutline,
+  CloseOutline,
+  ShareOutline,
+} from '@vicons/ionicons5';
+import {
   BodyOutline,
+  CheckmarkCircle,
+  PaperPlaneOutline,
   WalkOutline,
 } from '@vicons/ionicons5';
+import { MoreHorizFilled } from '@vicons/material';
+import { NIcon, useDialog } from 'naive-ui';
+import type { DropdownOption } from 'naive-ui';
+import { computed, h } from 'vue';
+import type { Component } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const defaultavatar =
   'https://assets.paopao.info/public/avatar/default/admin.png';
@@ -187,12 +187,12 @@ const renderIcon = (icon: Component) => {
 };
 
 const actionOpts = computed(() => {
-  let user =
+  const user =
     props.message.type == 4 &&
     props.message.sender_user_id == store.state.userInfo.id
       ? props.message.receiver_user
       : props.message.sender_user;
-  let options: DropdownOption[] = [
+  const options: DropdownOption[] = [
     {
       label: '私信 @' + user.username,
       key: 'whisper',
@@ -223,7 +223,7 @@ const emit = defineEmits<{
 }>();
 
 const onHandleFollowAction = (message: Item.MessageProps) => {
-  let user =
+  const user =
     message.type == 4 && message.sender_user_id == store.state.userInfo.id
       ? message.receiver_user
       : message.sender_user;
@@ -273,7 +273,7 @@ const handleAction = (item: 'whisper' | 'follow' | 'unfollow') => {
     case 'whisper':
       const message = props.message;
       if (message.type != 99) {
-        let user =
+        const user =
           message.type == 4 && message.sender_user_id == store.state.userInfo.id
             ? message.receiver_user
             : message.sender_user;

@@ -5,44 +5,56 @@
                 <n-avatar round :size="30" :src="post.user.avatar" />
             </template>
             <template #header>
-                <router-link
-                    @click.stop
-                    class="username-link"
-                    :to="{
-                        name: 'user',
-                        query: { s: post.user.username },
-                    }"
-                >
-                    {{ post.user.nickname }}
-                </router-link>
-                <span class="username-wrap"> @{{ post.user.username }} </span>
-                <n-tag
-                    v-if="post.is_top"
-                    class="top-tag"
-                    type="warning"
-                    size="small"
-                    round
-                >
-                    置顶
-                </n-tag>
-                <n-tag
-                    v-if="post.visibility == VisibilityEnum.PRIVATE"
-                    class="top-tag"
-                    type="error"
-                    size="small"
-                    round
-                >
-                    私密
-                </n-tag>
-                <n-tag
-                    v-if="post.visibility == VisibilityEnum.FRIEND"
-                    class="top-tag"
-                    type="info"
-                    size="small"
-                    round
-                >
-                    好友可见
-                </n-tag>
+                <div class="post-header">
+                    <div class="post-header-top">
+                        <router-link
+                            @click.stop
+                            class="username-link"
+                            :to="{
+                                name: 'user',
+                                query: { s: post.user.username },
+                            }"
+                        >
+                            {{ post.user.nickname }}
+                        </router-link>
+                        <n-tag
+                            v-if="post.is_top"
+                            class="top-tag"
+                            type="warning"
+                            size="small"
+                            round
+                        >
+                            置顶
+                        </n-tag>
+                        <n-tag
+                            v-if="post.visibility == VisibilityEnum.PRIVATE"
+                            class="top-tag"
+                            type="error"
+                            size="small"
+                            round
+                        >
+                            私密
+                        </n-tag>
+                        <n-tag
+                            v-if="post.visibility == VisibilityEnum.FRIEND"
+                            class="top-tag"
+                            type="info"
+                            size="small"
+                            round
+                        >
+                            好友可见
+                        </n-tag>
+                    </div>
+                    <div class="post-header-bottom">
+                        <div class="timestamp">
+                            发布于 {{ formatPrettyTime(post.created_on) }}
+                            <span v-if="!store.state.collapsedLeft && post.created_on != post.latest_replied_on">
+                                <n-divider vertical /> 最后回复
+                                {{ formatPrettyTime(post.latest_replied_on) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </template>
             <template #header-extra>
                 <div class="options">
@@ -69,7 +81,7 @@
                     :mask-closable="false"
                     preset="dialog"
                     title="提示"
-                    content="确定删除该泡泡动态吗？"
+                    content="确定删除该动态吗？"
                     positive-text="确认"
                     negative-text="取消"
                     @positive-click="execDelAction"
@@ -83,7 +95,7 @@
                     :content="
                         '确定' +
                         (post.is_lock ? '解锁' : '锁定') +
-                        '该泡泡动态吗？'
+                        '该动态吗？'
                     "
                     positive-text="确认"
                     negative-text="取消"
@@ -98,7 +110,7 @@
                     :content="
                         '确定' +
                         (post.is_top ? '取消置顶' : '置顶') +
-                        '该泡泡动态吗？'
+                        '该动态吗？'
                     "
                     positive-text="确认"
                     negative-text="取消"
@@ -111,7 +123,7 @@
                     preset="dialog"
                     title="提示"
                     :content="
-                        '确定将该泡泡动态' +
+                        '确定将该动态' +
                         (post.is_essence ? '取消亮点' : '设为亮点') +
                         '吗？'
                     "
@@ -126,7 +138,7 @@
                     preset="dialog"
                     title="提示"
                     :content="
-                        '确定将该泡泡动态可见度修改为' +
+                        '确定将该动态可见度修改为' +
                         (tempVisibility == 0 ? '公开' : (tempVisibility == 1 ? '私密' : (tempVisibility == 2 ? '好友可见' : '关注可见'))) +
                         '吗？'
                     "
@@ -157,17 +169,6 @@
                 <post-image :imgs="post.imgs" />
                 <post-video :videos="post.videos" :full="true" />
                 <post-link :links="post.links" />
-                <div class="timestamp">
-                    发布于 {{ formatPrettyTime(post.created_on) }}
-                    <span v-if="post.ip_loc">
-                        <n-divider vertical />
-                        {{ post.ip_loc }}
-                    </span>
-                    <span v-if="!store.state.collapsedLeft && post.created_on != post.latest_replied_on">
-                        <n-divider vertical /> 最后回复
-                        {{ formatPrettyTime(post.latest_replied_on) }}
-                    </span>
-                </div>
             </template>
             <template #action>
                 <div class="opts-wrap">
@@ -177,8 +178,8 @@
                             @click.stop="handlePostStar"
                         >
                             <n-icon size="20" class="opt-item-icon">
-                                <heart-outline v-if="!hasStarred" />
-                                <heart v-if="hasStarred" color="red" />
+                                <flash-outline v-if="!hasStarred" />
+                                <flash v-if="hasStarred" color="#f5a623" />
                             </n-icon>
                             {{ post.upvote_count }}
                         </div>
@@ -198,15 +199,19 @@
                             </n-icon>
                             {{ post.collection_count }}
                         </div>
-                        <div
-                            class="opt-item hover"
-                            @click.stop="handlePostShare"
+                        <n-dropdown
+                            placement="bottom-end"
+                            trigger="hover"
+                            size="small"
+                            :options="tweetOptions"
+                            @select="handleTweetAction"
                         >
-                            <n-icon size="20" class="opt-item-icon">
-                                <share-social-outline />
-                            </n-icon>
-                            {{ post.share_count }}
-                        </div>
+                            <div class="opt-item hover" @click.stop>
+                                <n-icon size="20" class="opt-item-icon">
+                                    <share-social-outline />
+                                </n-icon>
+                            </div>
+                        </n-dropdown>
                     </n-space>
                 </div>
             </template>
@@ -215,48 +220,49 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, onMounted, computed } from 'vue';
-import type { Component } from 'vue';
-import { NIcon, useDialog } from 'naive-ui';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import { formatPrettyTime } from '@/utils/formatTime';
-import { parsePostTag } from '@/utils/content';
 import {
-  PaperPlaneOutline,
-  Heart,
-  HeartOutline,
-  Bookmark,
-  BookmarkOutline,
-  ShareSocialOutline,
-  ChatboxOutline,
-  PushOutline,
-  TrashOutline,
-  LockClosedOutline,
-  LockOpenOutline,
-  EyeOutline,
-  EyeOffOutline,
-  BodyOutline,
-  WalkOutline,
-  PersonOutline,
-  FlameOutline,
-} from '@vicons/ionicons5';
-import { MoreHorizFilled } from '@vicons/material';
-import {
-  getPostStar,
-  postStar,
-  getPostCollection,
-  postCollection,
   deletePost,
-  lockPost,
-  stickPost,
+  getPostCollection,
+  getPostStar,
   highlightPost,
+  lockPost,
+  postCollection,
+  postStar,
+  stickPost,
   visibilityPost,
 } from '@/api/post';
 import { followUser, unfollowUser } from '@/api/user';
-import type { DropdownOption } from 'naive-ui';
 import { VisibilityEnum } from '@/utils/IEnum';
+import { parsePostTag } from '@/utils/content';
+import { formatPrettyTime } from '@/utils/formatTime';
+import { Discord, Link, Telegram, Twitter } from '@vicons/fa';
+import {
+  BodyOutline,
+  Bookmark,
+  BookmarkOutline,
+  ChatboxOutline,
+  EyeOffOutline,
+  EyeOutline,
+  FlameOutline,
+  Flash,
+  FlashOutline,
+  LockClosedOutline,
+  LockOpenOutline,
+  PaperPlaneOutline,
+  PersonOutline,
+  PushOutline,
+  ShareSocialOutline,
+  TrashOutline,
+  WalkOutline,
+} from '@vicons/ionicons5';
+import { MoreHorizFilled } from '@vicons/material';
 import copy from 'copy-to-clipboard';
+import { NIcon, useDialog } from 'naive-ui';
+import type { DropdownOption } from 'naive-ui';
+import { computed, h, onMounted, ref } from 'vue';
+import type { Component } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const useFriendship =
   import.meta.env.VITE_USE_FRIENDSHIP.toLowerCase() === 'true';
@@ -303,13 +309,11 @@ const whisperSuccess = () => {
   showWhisper.value = false;
 };
 
-const emit = defineEmits<{
-  (e: 'reload', post_id: number): void;
-}>();
+const emit = defineEmits<(e: 'reload', post_id: number) => void>();
 
 const post = computed({
   get: () => {
-    let post: Item.PostComponentProps = Object.assign(
+    const post: Item.PostComponentProps = Object.assign(
       {
         texts: [],
         imgs: [],
@@ -359,7 +363,7 @@ const renderIcon = (icon: Component) => {
 };
 
 const adminOptions = computed(() => {
-  let options: DropdownOption[] = [];
+  const options: DropdownOption[] = [];
   if (
     !store.state.userInfo.is_admin &&
     store.state.userInfo.id != props.post.user.id
@@ -481,6 +485,16 @@ const adminOptions = computed(() => {
     });
   }
   options.push(visitMenu);
+  return options;
+});
+
+const tweetOptions = computed(() => {
+  const options: DropdownOption[] = [
+    { label: 'Telegram', key: 'telegram', icon: renderIcon(Telegram) },
+    { label: 'X', key: 'twitter', icon: renderIcon(Twitter) },
+    { label: 'Discord', key: 'discord', icon: renderIcon(Discord) },
+    { label: '复制链接', key: 'copyTweetLink', icon: renderIcon(Link) },
+  ];
   return options;
 });
 
@@ -736,11 +750,56 @@ const handlePostCollection = () => {
       console.log(err);
     });
 };
-const handlePostShare = () => {
-  copy(
-    `${window.location.origin}/#/post?id=${post.value.id}&share=copy_link&t=${new Date().getTime()}`,
-  );
-  window.$message.success('链接已复制到剪贴板');
+const handleTweetAction = (
+  item: 'copyTweetLink' | 'telegram' | 'twitter' | 'discord',
+) => {
+  try {
+    const url = encodeURIComponent(
+      `${window.location.origin}/#/post?id=${post.value.id}`,
+    );
+    const title =
+      post.value.texts.length > 0
+        ? post.value.texts[0].content.substring(0, 50) + '...'
+        : '分享动态';
+    const text = encodeURIComponent(title);
+    switch (item) {
+      case 'telegram':
+        const tgWin = window.open(
+          `https://t.me/share/url?url=${url}&text=${text}`,
+          '_blank',
+        );
+        if (!tgWin) throw new Error('Telegram popup blocked');
+        break;
+      case 'twitter':
+        const twWin = window.open(
+          `https://twitter.com/intent/tweet?url=${url}&text=${text}`,
+          '_blank',
+        );
+        if (!twWin) throw new Error('Twitter popup blocked');
+        break;
+      case 'discord':
+        if (!copy(`${window.location.origin}/#/post?id=${post.value.id}`)) {
+          throw new Error('Clipboard copy failed');
+        }
+        window.$message.success('链接已复制，请在 Discord 中粘贴分享');
+        break;
+      case 'copyTweetLink':
+        if (
+          !copy(
+            `${window.location.origin}/#/post?id=${post.value.id}&share=copy_link&t=${new Date().getTime()}`,
+          )
+        ) {
+          throw new Error('Clipboard copy failed');
+        }
+        window.$message.success('链接已复制到剪贴板');
+        break;
+      default:
+        break;
+    }
+  } catch (error) {
+    console.error('Share failed:', error);
+    window.$message.error('分享操作失败，请检查浏览器设置');
+  }
 };
 
 onMounted(() => {
@@ -775,12 +834,26 @@ onMounted(() => {
     box-sizing: border-box;
 
     background: #f7f9f9;
-    .nickname-wrap {
+    .username-link {
         font-size: 14px;
     }
-    .username-wrap {
-        font-size: 14px;
+    .post-header {
+        display: flex;
+        flex-direction: column;
+    }
+    .post-header-top {
+        display: flex;
+        align-items: center;
+    }
+    .post-header-bottom {
+        display: flex;
+        align-items: center;
         opacity: 0.75;
+        margin-top: 4px;
+        .timestamp {
+            font-size: 12px;
+            margin-top: 0;
+        }
     }
     .top-tag {
         transform: scale(0.75);

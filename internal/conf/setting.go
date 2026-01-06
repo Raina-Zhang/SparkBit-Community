@@ -314,6 +314,12 @@ type WebProfileConf struct {
 	CopyrightRightLink        string `json:"copyright_right_link"`
 }
 
+type liveKitConf struct {
+	Url       string
+	ApiKey    string
+	SecretKey string
+}
+
 func (s *httpServerConf) GetReadTimeout() time.Duration {
 	return s.ReadTimeout * time.Second
 }

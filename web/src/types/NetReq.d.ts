@@ -1,4 +1,4 @@
-declare module NetReq {
+declare namespace NetReq {
   interface AuthUserLogin {
     token: string;
   }
@@ -12,7 +12,7 @@ declare module NetReq {
 
   type AuthUserInfo = Item.UserInfo;
 
-  interface AuthUpdateUserPassword {}
+  type AuthUpdateUserPassword = {};
 
   interface UserGetCollections {
     /** 帖子列表 */
@@ -41,9 +41,9 @@ declare module NetReq {
     count: number;
   }
 
-  interface ReadMessageResp {}
+  type ReadMessageResp = {};
 
-  interface ReadAllMessageResp {}
+  type ReadAllMessageResp = {};
 
   interface UserGetMessages {
     /** 消息列表 */
@@ -76,7 +76,7 @@ declare module NetReq {
     status: string;
   }
 
-  interface UserBindUserPhone {}
+  type UserBindUserPhone = {};
 
   interface UserGetCaptcha {
     id: string;
@@ -84,11 +84,11 @@ declare module NetReq {
     b64s: string;
   }
 
-  interface UserChangeNickname {}
+  type UserChangeNickname = {};
 
-  interface UserChangePassword {}
+  type UserChangePassword = {};
 
-  interface UserChangeStatus {}
+  type UserChangeStatus = {};
 
   interface SiteInfoResp {
     register_user_count: number;
@@ -97,17 +97,17 @@ declare module NetReq {
     server_up_time: number;
   }
 
-  interface FollowUserResp {}
+  type FollowUserResp = {};
 
-  interface UnfollowUserResp {}
+  type UnfollowUserResp = {};
 
-  interface AddFriend {}
+  type AddFriend = {};
 
-  interface DeleteFriend {}
+  type DeleteFriend = {};
 
-  interface RejectFriend {}
+  type RejectFriend = {};
 
-  interface RequestingFriend {}
+  type RequestingFriend = {};
 
   type PostGetPost = Item.PostProps;
 
@@ -168,15 +168,15 @@ declare module NetReq {
 
   type PostCreatePost = Item.PostProps;
 
-  interface PostDeletePost {}
+  type PostDeletePost = {};
 
-  interface PostTweetCommentThumbs {}
+  type PostTweetCommentThumbs = {};
 
-  interface PostTweetReplyThumbs {}
+  type PostTweetReplyThumbs = {};
 
   type PostCreateComment = Item.CommentProps;
 
-  interface PostDeleteComment {}
+  type PostDeleteComment = {};
 
   interface PostHighlightComment {
     highlight_status: import('@/utils/IEnum').YesNoEnum;
@@ -184,7 +184,7 @@ declare module NetReq {
 
   type PostCreateCommentReply = Item.ReplyProps;
 
-  interface PostDeleteCommentReply {}
+  type PostDeleteCommentReply = {};
 
   interface GetContacts {
     /** 评论列表 */
@@ -208,9 +208,9 @@ declare module NetReq {
     pin_status: 0 | 1;
   }
 
-  interface PostFollowTopic {}
+  type PostFollowTopic = {};
 
-  interface PostUnfollowTopic {}
+  type PostUnfollowTopic = {};
 
   interface SiteProfile {
     use_friendship?: boolean;

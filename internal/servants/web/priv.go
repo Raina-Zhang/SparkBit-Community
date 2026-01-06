@@ -44,6 +44,7 @@ type privSrv struct {
 	*base.DaoServant
 
 	oss core.ObjectStorageService
+	ls  core.LiveService
 }
 
 type privChain struct {
@@ -898,10 +899,11 @@ func (s *privSrv) buyPostAttachment(post *ms.Post, user *ms.User) error {
 	return nil
 }
 
-func newPrivSrv(s *base.DaoServant, oss core.ObjectStorageService) api.Priv {
+func newPrivSrv(ds *base.DaoServant, oss core.ObjectStorageService, ls core.LiveService) api.Priv {
 	return &privSrv{
-		DaoServant: s,
+		DaoServant: ds,
 		oss:        oss,
+		ls:         ls,
 	}
 }
 

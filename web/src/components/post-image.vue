@@ -223,7 +223,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const defaultImg = import.meta.env.VITE_DEFAULT_TWEET_IMAGE_404;
 const thumbnail = import.meta.env.VITE_TWEET_IMAGE_THUMBNAIL;

@@ -1,9 +1,15 @@
 <template>
     <div class="sidebar-wrap">
-        <div class="logo-wrap">
-            <n-image class="logo-img" width="36" :src="LOGO" :preview-disabled="true" @click="goHome" />
+        <n-menu :accordion="true" :icon-size="24" :options="mainMenuOptions" :render-label="renderMenuLabel"
+            :render-icon="renderMenuIcon" :value="selectedPath" @update:value="goRouter" />
+
+        <div class="publish-btn-wrap" v-if="store.state.userInfo.id > 0">
+            <n-button type="primary" round block color="#6A60FF" size="large" class="publish-btn">
+                发布文章
+            </n-button>
         </div>
-        <n-menu :accordion="true" :icon-size="24" :options="menuOptions" :render-label="renderMenuLabel"
+
+        <n-menu :accordion="true" :icon-size="24" :options="secondaryMenuOptions" :render-label="renderMenuLabel"
             :render-icon="renderMenuIcon" :value="selectedPath" @update:value="goRouter" />
 
         <div class="user-wrap" v-if="store.state.userInfo.id > 0">
@@ -54,24 +60,23 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, watch, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useStore } from 'vuex';
-import { NIcon, NBadge, useMessage } from 'naive-ui';
+import { getUnreadMsgCount } from '@/api/user';
 import {
-  HomeOutline,
   BookmarksOutline,
-  MegaphoneOutline,
   ChatbubblesOutline,
+  HomeOutline,
   LeafOutline,
-  PeopleOutline,
-  WalletOutline,
-  SettingsOutline,
   LogOutOutline,
+  MegaphoneOutline,
+  PeopleOutline,
+  SettingsOutline,
+  WalletOutline,
 } from '@vicons/ionicons5';
 import { Hash } from '@vicons/tabler';
-import { getUnreadMsgCount } from '@/api/user';
-import LOGO from '@/assets/img/logo.png';
+import { NBadge, NIcon, useMessage } from 'naive-ui';
+import { computed, h, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const store = useStore();
 const route = useRoute();
@@ -122,7 +127,7 @@ onMounted(() => {
     store.commit('triggerCollapsedRight', document.body.clientWidth <= 821);
   };
 });
-const menuOptions = computed(() => {
+const mainMenuOptions = computed(() => {
   const options = [
     {
       label: '广场',
@@ -146,31 +151,11 @@ const menuOptions = computed(() => {
     });
   }
   options.push({
-    label: '主页',
+    label: '个人主页',
     key: 'profile',
     icon: () => h(LeafOutline),
     href: '/profile',
   });
-  options.push({
-    label: '消息',
-    key: 'messages',
-    icon: () => h(ChatbubblesOutline),
-    href: '/messages',
-  });
-  options.push({
-    label: '收藏',
-    key: 'collection',
-    icon: () => h(BookmarksOutline),
-    href: '/collection',
-  });
-  if (store.state.profile.useFriendship) {
-    options.push({
-      label: '好友',
-      key: 'contacts',
-      icon: () => h(PeopleOutline),
-      href: '/contacts',
-    });
-  }
   if (store.state.profile.enableWallet) {
     options.push({
       label: '钱包',
@@ -179,12 +164,6 @@ const menuOptions = computed(() => {
       href: '/wallet',
     });
   }
-  options.push({
-    label: '设置',
-    key: 'setting',
-    icon: () => h(SettingsOutline),
-    href: '/setting',
-  });
 
   return store.state.userInfo.id > 0
     ? options
@@ -202,6 +181,44 @@ const menuOptions = computed(() => {
           href: '/topic',
         },
       ];
+});
+
+const secondaryMenuOptions = computed(() => {
+  if (store.state.userInfo.id <= 0) {
+    return [];
+  }
+  const options = [];
+  if (store.state.profile.useFriendship) {
+    options.push({
+      label: '好友',
+      key: 'contacts',
+      icon: () => h(PeopleOutline),
+      href: '/contacts',
+      disabled: true,
+    });
+  }
+  options.push({
+    label: '设置',
+    key: 'setting',
+    icon: () => h(SettingsOutline),
+    href: '/setting',
+    disabled: true,
+  });
+  options.push({
+    label: '消息',
+    key: 'messages',
+    icon: () => h(ChatbubblesOutline),
+    href: '/messages',
+    disabled: true,
+  });
+  options.push({
+    label: '收藏',
+    key: 'collection',
+    icon: () => h(BookmarksOutline),
+    href: '/collection',
+    disabled: true,
+  });
+  return options;
 });
 
 const renderMenuLabel = (option: AnyObject) => {
@@ -295,13 +312,21 @@ window.$message = useMessage();
         justify-content: flex-start;
         margin-bottom: 12px;
 
-        .logo-img {
+        .logo-txt {
             margin-left: 24px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #6A60FF;
+            cursor: pointer;
 
             &:hover {
-                cursor: pointer;
+                opacity: 0.8;
             }
         }
+    }
+
+    .publish-btn-wrap {
+        margin: 12px 16px;
     }
 
     .user-wrap {

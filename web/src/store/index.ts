@@ -1,5 +1,7 @@
 import { createStore } from 'vuex';
 
+import { MOCK_USER } from '@/mock/data';
+
 export default createStore({
   state: {
     refresh: Date.now(),
@@ -12,16 +14,9 @@ export default createStore({
     authModalShow: false,
     authModelTab: 'signin',
     unreadMsgCount: 0,
-    userLogined: false,
+    userLogined: true, // Mocked login
     userInfo: {
-      id: 0,
-      username: '',
-      nickname: '',
-      created_on: 0,
-      follows: 0,
-      followings: 0,
-      tweets_count: 0,
-      is_admin: false,
+      ...MOCK_USER, // Mocked user data
     },
     profile: {
       useFriendship: true,
@@ -40,7 +35,7 @@ export default createStore({
       copyrightTop: '2023 paopao.info',
       copyrightLeft: "Roc's Me",
       copyrightLeftLink: '',
-      copyrightRight: '泡泡(PaoPao)开源社区',
+      copyrightRight: 'SparkBit社区',
       copyrightRightLink: 'https://www.paopao.info',
     },
   },
@@ -187,11 +182,15 @@ export default createStore({
         id: 0,
         nickname: '',
         username: '',
+        avatar: '',
         created_on: 0,
         follows: 0,
         followings: 0,
         tweets_count: 0,
         is_admin: false,
+        is_friend: 0,
+        is_following: 0,
+        status: 1,
       };
       state.userLogined = false;
     },
