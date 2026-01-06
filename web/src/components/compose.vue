@@ -197,19 +197,7 @@
                     </div>
 
                     <div class="submit-wrap">
-                        <n-tooltip trigger="hover" placement="bottom">
-                            <template #trigger>
-                                <n-progress
-                                    class="text-statistic"
-                                    type="circle"
-                                    :show-indicator="false"
-                                    status="success"
-                                    :stroke-width="10"
-                                    :percentage="(content.length / store.state.profile.defaultTweetMaxLength) * 100"
-                                />
-                            </template>
-                            已输入{{ content.length }}字
-                        </n-tooltip>
+                        <span class="text-statistic">{{ content.length }}/2000</span>
 
                         <n-button
                             @click="() => {}"
@@ -490,8 +478,8 @@ const handleSearch = (k: string, prefix: string) => {
   }
 };
 const changeContent = (v: string) => {
-  if (v.length > store.state.profile.defaultTweetMaxLength) {
-    content.value = v.substring(0, store.state.profile.defaultTweetMaxLength);
+  if (v.length > 2000) {
+    content.value = v.substring(0, 2000);
   } else {
     content.value = v;
   }
@@ -750,9 +738,7 @@ onMounted(() => {
                 align-items: center;
                 .text-statistic {
                     margin-right: 8px;
-                    width: 20px;
-                    height: 20px;
-                    transform: rotate(180deg);
+                    opacity: 0.75;
                 }
             }
         }
