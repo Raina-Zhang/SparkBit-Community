@@ -15,6 +15,7 @@ type Comment struct {
 	*Model
 	PostID          int64  `json:"post_id"`
 	UserID          int64  `json:"user_id"`
+	CommentType     int8   `json:"comment_type"`
 	IP              string `json:"ip"`
 	IPLoc           string `json:"ip_loc"`
 	IsEssence       int8   `json:"is_essense"`

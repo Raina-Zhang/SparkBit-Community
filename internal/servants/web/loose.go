@@ -13,7 +13,6 @@ import (
 	"github.com/rocboss/paopao-ce/internal/core"
 	"github.com/rocboss/paopao-ce/internal/core/cs"
 	"github.com/rocboss/paopao-ce/internal/core/ms"
-	"github.com/rocboss/paopao-ce/internal/dao/jinzhu/dbr"
 	"github.com/rocboss/paopao-ce/internal/model/joint"
 	"github.com/rocboss/paopao-ce/internal/model/web"
 	"github.com/rocboss/paopao-ce/internal/servants/base"
@@ -442,32 +441,13 @@ func (s *looseSrv) TweetComments(req *web.TweetCommentsReq) (res *web.TweetComme
 		return nil, web.ErrGetCommentsFailed
 	}
 
-	replies, xerr := s.Ds.GetCommentRepliesByID(commentIDs)
-	if xerr != nil {
-		logrus.Errorf("looseSrv.TweetComments occurs error[4]: %s", xerr)
-		return nil, web.ErrGetCommentsFailed
-	}
-
-	var commentThumbs, replyThumbs cs.CommentThumbsMap
+	var commentThumbs cs.CommentThumbsMap
 	if req.Uid > 0 {
-		commentThumbs, replyThumbs, xerr = s.Ds.GetCommentThumbsMap(req.Uid, req.TweetId)
+		var xerr error
+		commentThumbs, _, xerr = s.Ds.GetCommentThumbsMap(req.Uid, req.TweetId)
 		if xerr != nil {
 			logrus.Errorf("looseSrv.TweetComments occurs error[5]: %s", xerr)
 			return nil, web.ErrGetCommentsFailed
-		}
-	}
-
-	replyMap := make(map[int64][]*dbr.CommentReplyFormated)
-	if len(replyThumbs) > 0 {
-		for _, reply := range replies {
-			if thumbs, exist := replyThumbs[reply.ID]; exist {
-				reply.IsThumbsUp, reply.IsThumbsDown = thumbs.IsThumbsUp, thumbs.IsThumbsDown
-			}
-			replyMap[reply.CommentID] = append(replyMap[reply.CommentID], reply)
-		}
-	} else {
-		for _, reply := range replies {
-			replyMap[reply.CommentID] = append(replyMap[reply.CommentID], reply)
 		}
 	}
 
@@ -481,9 +461,6 @@ func (s *looseSrv) TweetComments(req *web.TweetCommentsReq) (res *web.TweetComme
 			if content.CommentID == comment.ID {
 				commentFormated.Contents = append(commentFormated.Contents, content)
 			}
-		}
-		if replySlice, exist := replyMap[commentFormated.ID]; exist {
-			commentFormated.Replies = replySlice
 		}
 		for _, user := range users {
 			if user.ID == comment.UserID {

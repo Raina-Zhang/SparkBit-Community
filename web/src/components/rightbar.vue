@@ -5,7 +5,7 @@
                 <n-input
                     ref="searchInputRef"
                     class="search-input"
-                    placeholder="Search"
+                    placeholder="搜索作者，话题或内容"
                     v-model:value="keyword"
                     @keyup.enter.prevent="handleSearch"
                 >

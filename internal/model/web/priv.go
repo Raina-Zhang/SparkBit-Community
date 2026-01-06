@@ -123,11 +123,12 @@ type VisibleTweetResp struct {
 }
 
 type CreateCommentReq struct {
-	SimpleInfo `json:"-" binding:"-"`
-	PostID     int64              `json:"post_id" binding:"required"`
-	Contents   []*PostContentItem `json:"contents" binding:"required"`
-	Users      []string           `json:"users" binding:"required"`
-	ClientIP   string             `json:"-" binding:"-"`
+	SimpleInfo  `json:"-" binding:"-"`
+	PostID      int64              `json:"post_id" binding:"required"`
+	Contents    []*PostContentItem `json:"contents" binding:"required"`
+	Users       []string           `json:"users" binding:"required"`
+	CommentType int8               `json:"comment_type"`
+	ClientIP    string             `json:"-" binding:"-"`
 }
 
 type CreateCommentResp ms.Comment

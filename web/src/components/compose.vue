@@ -120,23 +120,65 @@
                             </n-button>
                         </n-upload-trigger>
 
-                        <n-dropdown
-                            trigger="hover"
-                            :options="tagDropdownOptions"
-                            @select="handleTagSelect"
+                        <n-popover
+                            trigger="click"
+                            v-model:show="showTagPopover"
+                            placement="bottom-start"
+                            style="padding: 0; width: 300px;"
                         >
-                            <n-button
-                                quaternary
-                                circle
-                                type="primary"
-                            >
-                                <template #icon>
-                                    <n-icon size="20" color="var(--primary-color)">
-                                        <hash />
-                                    </n-icon>
-                                </template>
-                            </n-button>
-                        </n-dropdown>
+                            <template #trigger>
+                                <n-button
+                                    quaternary
+                                    circle
+                                    type="primary"
+                                >
+                                    <template #icon>
+                                        <n-icon size="20" color="var(--primary-color)">
+                                            <hash />
+                                        </n-icon>
+                                    </template>
+                                </n-button>
+                            </template>
+                            <n-tabs type="line" animated justify-content="space-evenly" style="width: 100%">
+                                <n-tab-pane name="hot" tab="热门">
+                                    <div style="max-height: 300px; overflow-y: auto;">
+                                        <n-list hoverable clickable>
+                                            <n-list-item v-for="tag in hotTagsList" :key="tag.key" @click="handleTagSelect(tag.key)">
+                                                <div style="padding: 8px 12px; cursor: pointer;">{{ tag.label }}</div>
+                                            </n-list-item>
+                                            <div v-if="hotTagsList.length === 0" style="padding: 12px; text-align: center; color: #999;">暂无数据</div>
+                                        </n-list>
+                                    </div>
+                                </n-tab-pane>
+                                <n-tab-pane name="web3" tab="Web3">
+                                    <div style="max-height: 300px; overflow-y: auto;">
+                                        <n-list hoverable clickable>
+                                            <n-list-item v-for="tag in web3TagsList" :key="tag.key" @click="handleTagSelect(tag.key)">
+                                                <div style="padding: 8px 12px; cursor: pointer;">{{ tag.label }}</div>
+                                            </n-list-item>
+                                        </n-list>
+                                    </div>
+                                </n-tab-pane>
+                                <n-tab-pane name="currency" tab="币种">
+                                    <div style="max-height: 300px; overflow-y: auto;">
+                                        <n-list hoverable clickable>
+                                            <n-list-item v-for="tag in currencyTagsList" :key="tag.key" @click="handleTagSelect(tag.key)">
+                                                <div style="padding: 8px 12px; cursor: pointer;">{{ tag.label }}</div>
+                                            </n-list-item>
+                                        </n-list>
+                                    </div>
+                                </n-tab-pane>
+                                <n-tab-pane name="activity" tab="活动">
+                                    <div style="max-height: 300px; overflow-y: auto;">
+                                        <n-list hoverable clickable>
+                                            <n-list-item v-for="tag in activityTagsList" :key="tag.key" @click="handleTagSelect(tag.key)">
+                                                <div style="padding: 8px 12px; cursor: pointer;">{{ tag.label }}</div>
+                                            </n-list-item>
+                                        </n-list>
+                                    </div>
+                                </n-tab-pane>
+                            </n-tabs>
+                        </n-popover>
 
 
                          <n-button
@@ -273,6 +315,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 
 import { createPost, getTags } from '@/api/post';
+import { activityTags, currencyTags, web3Tags } from '@/utils/tagCategories';
 import { PostItemTypeEnum, VisibilityEnum } from '@/utils/IEnum';
 import { parsePostTag } from '@/utils/content';
 import { isZipFile } from '@/utils/isZipFile';
@@ -290,7 +333,14 @@ const emit = defineEmits<(e: 'post-success', post: Item.PostProps) => void>();
 const store = useStore();
 
 const optionsRef = ref<MentionOption[]>([]);
-const tagDropdownOptions = ref<{ label: string; key: string }[]>([]);
+const tagDropdownOptions = ref<any[]>([]);
+
+const hotTagsList = ref<{ label: string; key: string }[]>([]);
+const web3TagsList = ref<{ label: string; key: string }[]>([]);
+const currencyTagsList = ref<{ label: string; key: string }[]>([]);
+const activityTagsList = ref<{ label: string; key: string }[]>([]);
+const showTagPopover = ref(false);
+
 const loadTags = () => {
   getTags({
     type: 'hot_extral',
@@ -298,63 +348,29 @@ const loadTags = () => {
     extral_num: 0,
   })
     .then((res) => {
-      const options: { label: string; key: string }[] = [];
+      const hotOptions: { label: string; key: string }[] = [];
       if (res.topics && res.topics.length > 0) {
         res.topics.map((t) => {
-          options.push({
+          hotOptions.push({
             label: t.tag,
             key: t.tag,
           });
         });
       }
+      hotTagsList.value = hotOptions;
 
-      // Add mock tags if options are empty or few
-      const mockTags = [
-        'Bitcoin',
-        'Ethereum',
-        'Web3',
-        'DeFi',
-        'NFT',
-        'GameFi',
-        'Metaverse',
-        'DAO',
-        'Layer2',
-        'ZK-Rollup',
-      ];
-
-      mockTags.forEach((tag) => {
-        if (!options.some((o) => o.key === tag)) {
-          options.push({
-            label: tag,
-            key: tag,
-          });
-        }
-      });
-
-      tagDropdownOptions.value = options;
+      web3TagsList.value = web3Tags.map((tag: string) => ({ label: tag, key: tag }));
+      currencyTagsList.value = currencyTags.map((tag: string) => ({ label: tag, key: tag }));
+      activityTagsList.value = activityTags.map((item: any) => ({ label: item.tag, key: item.tag }));
     })
     .catch((err) => {
-      // Fallback to mock tags on error
-      const mockTags = [
-        'Bitcoin',
-        'Ethereum',
-        'Web3',
-        'DeFi',
-        'NFT',
-        'GameFi',
-        'Metaverse',
-        'DAO',
-        'Layer2',
-        'ZK-Rollup',
-      ];
-      tagDropdownOptions.value = mockTags.map((tag) => ({
-        label: tag,
-        key: tag,
-      }));
+        // Fallback or error handling
+        console.error(err);
     });
 };
 const handleTagSelect = (key: string) => {
   content.value += ` #${key} `;
+  showTagPopover.value = false;
 };
 const loading = ref(false);
 const submitting = ref(false);
@@ -420,21 +436,44 @@ const loadSuggestionUsers = debounce((k) => {
 
 // 加载推荐tag列表
 const loadSuggestionTags = debounce((k) => {
+  // Local match first
+  const localMatches: MentionOption[] = [];
+  const keyword = k.toLowerCase();
+  
+  const allStaticTags = [
+       ...web3Tags.map((t: string) => ({ label: t, value: t })),
+       ...currencyTags.map((t: string) => ({ label: t, value: t })),
+       ...activityTags.map((t: any) => ({ label: t.tag, value: t.tag }))
+   ];
+ 
+   allStaticTags.forEach((t) => {
+      if (t.label.toLowerCase().includes(keyword)) {
+          localMatches.push(t);
+      }
+  });
+
   getSuggestTags({
     k,
   })
     .then((res) => {
-      const options: MentionOption[] = [];
+      const options: MentionOption[] = [...localMatches];
+      // Avoid duplicates
+      const localValues = new Set(localMatches.map(m => m.value));
+      
       res.suggest.map((i) => {
-        options.push({
-          label: i,
-          value: i,
-        });
+        if (!localValues.has(i)) {
+            options.push({
+            label: i,
+            value: i,
+            });
+        }
       });
       optionsRef.value = options;
       loading.value = false;
     })
     .catch((err) => {
+      // If API fails, at least show local matches
+      optionsRef.value = localMatches;
       loading.value = false;
     });
 }, 200);

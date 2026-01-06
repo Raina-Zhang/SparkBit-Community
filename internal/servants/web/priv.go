@@ -391,83 +391,7 @@ func (s *privSrv) DeleteCommentReply(req *web.DeleteCommentReplyReq) error {
 }
 
 func (s *privSrv) CreateCommentReply(req *web.CreateCommentReplyReq) (_ *web.CreateCommentReplyResp, xerr error) {
-	var (
-		post     *ms.Post
-		comment  *ms.Comment
-		atUserID int64
-		err      error
-	)
-
-	if post, comment, atUserID, err = s.createPostPreHandler(req.CommentID, req.Uid, req.AtUserID); err != nil {
-		return nil, web.ErrCreateReplyFailed
-	}
-
-	// 创建评论
-	reply := &ms.CommentReply{
-		CommentID: req.CommentID,
-		UserID:    req.Uid,
-		Content:   req.Content,
-		AtUserID:  atUserID,
-		IP:        req.ClientIP,
-		IPLoc:     utils.GetIPLoc(req.ClientIP),
-	}
-
-	reply, err = s.Ds.CreateCommentReply(reply)
-	if err != nil {
-		return nil, web.ErrCreateReplyFailed
-	}
-
-	// 更新Post回复数
-	post.CommentCount++
-	post.LatestRepliedOn = time.Now().Unix()
-	s.Ds.UpdatePost(post)
-
-	// 更新索引
-	s.PushPostToSearch(post)
-
-	// 创建用户消息提醒
-	commentMaster, err := s.Ds.GetUserByID(comment.UserID)
-	if err == nil && commentMaster.ID != req.Uid {
-		onCreateMessageEvent(&ms.Message{
-			SenderUserID:   req.Uid,
-			ReceiverUserID: commentMaster.ID,
-			Type:           ms.MsgTypeReply,
-			Brief:          "在泡泡评论下回复了你",
-			PostID:         post.ID,
-			CommentID:      comment.ID,
-			ReplyID:        reply.ID,
-		})
-	}
-	postMaster, err := s.Ds.GetUserByID(post.UserID)
-	if err == nil && postMaster.ID != req.Uid && commentMaster.ID != postMaster.ID {
-		onCreateMessageEvent(&ms.Message{
-			SenderUserID:   req.Uid,
-			ReceiverUserID: postMaster.ID,
-			Type:           ms.MsgTypeReply,
-			Brief:          "在泡泡评论下发布了新回复",
-			PostID:         post.ID,
-			CommentID:      comment.ID,
-			ReplyID:        reply.ID,
-		})
-	}
-	if atUserID > 0 {
-		user, err := s.Ds.GetUserByID(atUserID)
-		if err == nil && user.ID != req.Uid && commentMaster.ID != user.ID && postMaster.ID != user.ID {
-			// 创建消息提醒
-			onCreateMessageEvent(&ms.Message{
-				SenderUserID:   req.Uid,
-				ReceiverUserID: user.ID,
-				Type:           ms.MsgTypeReply,
-				Brief:          "在泡泡评论的回复中@了你",
-				PostID:         post.ID,
-				CommentID:      comment.ID,
-				ReplyID:        reply.ID,
-			})
-		}
-	}
-	// 缓存处理
-	onCommentActionEvent(comment.PostID, comment.ID, _commentActionReplyCreate)
-	return (*web.CreateCommentReplyResp)(reply), nil
+	return nil, web.ErrCreateReplyFailed
 }
 
 func (s *privSrv) DeleteComment(req *web.DeleteCommentReq) error {
@@ -540,10 +464,11 @@ func (s *privSrv) CreateComment(req *web.CreateCommentReq) (_ *web.CreateComment
 		return nil, web.ErrMaxCommentCount
 	}
 	comment := &ms.Comment{
-		PostID: post.ID,
-		UserID: req.Uid,
-		IP:     req.ClientIP,
-		IPLoc:  utils.GetIPLoc(req.ClientIP),
+		PostID:      post.ID,
+		UserID:      req.Uid,
+		CommentType: req.CommentType,
+		IP:          req.ClientIP,
+		IPLoc:       utils.GetIPLoc(req.ClientIP),
 	}
 	comment, err = s.Ds.CreateComment(comment)
 	if err != nil {

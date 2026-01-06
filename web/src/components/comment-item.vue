@@ -17,9 +17,6 @@
                         {{ comment.user.nickname }}
                     </router-link>
                 </span>
-                <span class="username-wrap">
-                    @{{ comment.user.username }}
-                </span>
                 <n-tag
                     v-if="comment.is_essence == YesNoEnum.YES"
                     class="top-tag"
@@ -27,13 +24,13 @@
                     size="small"
                     round
                 >
-                    精选
+                    置顶
                 </n-tag>
             </template>
             <template #header-extra>
                 <div class="opt-wrap">
                     <span class="timestamp">
-                        {{  comment.ip_loc}}
+                        {{ formatPrettyTime(comment.created_on) }}
                     </span>
                     <n-popconfirm
                         v-if="store.state.userInfo.id === postUserId"
@@ -58,7 +55,7 @@
                                 </template>
                             </n-button>
                         </template>
-                        {{ comment.is_essence == YesNoEnum.NO ? "是否精选这条评论" : "是否取消精选"}}
+                        {{ comment.is_essence == YesNoEnum.NO ? "是否置顶这条评论" : "是否取消置顶"}}
                     </n-popconfirm>
                     <n-popconfirm
                         v-if="
@@ -101,26 +98,6 @@
                 <post-image
                     v-if="comment.imgs.length > 0"
                     :imgs="comment.imgs" />
-                  <!-- 回复编辑器 -->
-                  <compose-reply
-                    ref="replyComposeRef"
-                    :comment="comment"
-                    :at-userid="replyAtUserID"
-                    :at-username="replyAtUsername"
-                    @reload="reload"
-                    @reset="resetReply"
-                />
-                <!-- 回复列表 -->
-                <div class="reply-wrap">
-                    <reply-item
-                        v-for="reply in comment.replies"
-                        :key="reply.id"
-                        :reply="reply"
-                        :tweet-id="comment.post_id"
-                        @focusReply="focusReply"
-                        @reload="reload"
-                    />
-                </div>
             </template>
         </n-thing>
     </div>
@@ -130,16 +107,14 @@
 import { deleteComment, highlightComment } from '@/api/post';
 import { YesNoEnum } from '@/utils/IEnum';
 import { parsePostTag } from '@/utils/content';
+import { formatPrettyTime } from '@/utils/formatTime';
 import { ArrowBarDown, ArrowBarToUp, Trash } from '@vicons/tabler';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 
 const store = useStore();
 const router = useRouter();
-const replyAtUserID = ref(0);
-const replyAtUsername = ref('');
-const replyComposeRef = ref();
 
 const emit = defineEmits<(e: 'reload') => void>();
 const props = withDefaults(
@@ -189,17 +164,8 @@ const doClickText = (e: MouseEvent, id: number | string) => {
   }
 };
 
-const focusReply = (reply: Item.ReplyProps) => {
-  replyAtUserID.value = reply.user_id;
-  replyAtUsername.value = reply.user?.username || '';
-  replyComposeRef.value?.switchReply(true);
-};
 const reload = () => {
   emit('reload');
-};
-const resetReply = () => {
-  replyAtUserID.value = 0;
-  replyAtUsername.value = '';
 };
 
 const execDelAction = () => {
@@ -274,21 +240,7 @@ const execHightlightAction = () => {
     }
 }
 
-.reply-wrap {
-    margin-top: 10px;
-    border-radius: 5px;
-    background: #fafafc;
-
-    .reply-item {
-        &:last-child {
-            border-bottom: none;
-        }
-    }
-}
 .dark {
-    .reply-wrap {
-        background: #18181c;
-    }
     .comment-item {
         background-color: rgba(16, 16, 20, 0.75);
     }

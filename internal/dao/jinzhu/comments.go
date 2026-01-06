@@ -63,7 +63,7 @@ func (s *commentSrv) GetCommentThumbsMap(userId int64, tweetId int64) (cs.Commen
 
 func (s *commentSrv) GetComments(tweetId int64, style cs.StyleCommentType, limit int, offset int) (res []*ms.Comment, total int64, err error) {
 	db := s.db.Table(_comment_)
-	sort := "is_essence DESC, id ASC"
+	sort := "is_essence DESC, id DESC"
 	switch style {
 	case cs.StyleCommentHots:
 		// rank_score=评论回复数*2+点赞*4-点踩, order byrank_score DESC

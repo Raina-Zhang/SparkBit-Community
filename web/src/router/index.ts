@@ -99,6 +99,14 @@ const routes = [
     component: () => import('@/views/Setting.vue'),
   },
   {
+    path: '/localdb-test',
+    name: 'localdb-test',
+    meta: {
+      title: 'Local DB Test',
+    },
+    component: () => import('@/views/LocalDBTest.vue'),
+  },
+  {
     path: '/live',
     name: 'live',
     meta: {
